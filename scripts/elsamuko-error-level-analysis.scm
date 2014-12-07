@@ -48,22 +48,22 @@
     
     ;open 70% jpeg, set as diff layer
     (set! draw-tmp (car(gimp-file-load-layer RUN-NONINTERACTIVE img-tmp filename)))
-    (gimp-image-add-layer img-tmp draw-tmp -1)
+    (gimp-image-insert-layer img-tmp draw-tmp 0 -1)
     (gimp-layer-set-mode draw-tmp DIFFERENCE-MODE)
     (file-delete filename)
     
     ;error layer on top
     (gimp-edit-copy-visible img-tmp)
     (set! error-layer (car (gimp-layer-new-from-visible img-tmp img-tmp "Error Levels") ))
-    (gimp-image-add-layer img-tmp error-layer -1)    
+    (gimp-image-insert-layer img-tmp error-layer 0 -1)
     (gimp-levels-stretch error-layer)
     ;(gimp-display-new img-tmp)
     
     ;add error levels as layer on orig image
     (gimp-edit-copy-visible img-tmp)
     (set! error-layer (car (gimp-layer-new-from-visible img-tmp img "Error Levels") ))
-    (gimp-image-add-layer img error-layer -1)
-    (gimp-drawable-set-name error-layer "Error Levels")
+    (gimp-image-insert-layer img error-layer 0 -1)
+    (gimp-item-set-name error-layer "Error Levels")
     
     ; tidy up
     (gimp-image-delete img-tmp)

@@ -59,6 +59,7 @@
                   )
              
              ;init
+             (gimp-message "begin")
              ;(gimp-context-push)
              ;(gimp-image-undo-group-start img)
              (if (= (car (gimp-drawable-is-gray adraw )) TRUE)
@@ -70,10 +71,11 @@
              ;shadow recovery from here: http://registry.gimp.org/node/112
              (if(> shadowopacity 0)
                 (begin
-                  (gimp-image-add-layer img CopyLayer -1)
+                  (gimp-message "shadow revovery")
+                  (gimp-image-insert-layer img CopyLayer 0 -1)
                   (gimp-layer-set-mode CopyLayer ADDITION-MODE)
                   (gimp-layer-set-opacity CopyLayer shadowopacity)
-                  (gimp-image-add-layer img ShadowLayer -1)
+                  (gimp-image-insert-layer img ShadowLayer 0 -1)
                   (gimp-desaturate ShadowLayer)
                   (gimp-invert ShadowLayer)
                   (let* ((CopyMask (car (gimp-layer-create-mask CopyLayer ADD-WHITE-MASK)))
@@ -89,14 +91,15 @@
                   (gimp-layer-set-mode ShadowLayer OVERLAY-MODE)
                   (gimp-layer-set-opacity ShadowLayer shadowopacity)
                   (gimp-image-remove-layer img CopyLayer)
-                  (gimp-drawable-set-name ShadowLayer "Shadow Recovery")
+                  (gimp-item-set-name ShadowLayer "Shadow Recovery")
                   )
                 )
              
              ;smart sharpen from here: http://registry.gimp.org/node/108
              (if(> sharpness 0)
                 (begin
-                  (gimp-image-add-layer img SharpenLayer -1)
+                  (gimp-message "sharpen")
+                  (gimp-image-insert-layer img SharpenLayer 0 -1)
                   (gimp-selection-all HSVImage)
                   (gimp-edit-copy (aref HSVLayer 0))
                   (gimp-image-delete HSVImage)
@@ -117,12 +120,13 @@
                     (gimp-layer-set-opacity SharpenLayer 80)
                     (gimp-layer-set-edit-mask SharpenLayer FALSE)
                     )
-                  (gimp-drawable-set-name SharpenLayer "Sharpen")
+                  (gimp-item-set-name SharpenLayer "Sharpen")
                   )
                 )
              
              ;enhance local contrast
              (if(> localcontrast 0)
+                (gimp-message "local contrast")
                 (plug-in-unsharp-mask 1 img adraw 60 localcontrast 0)
                 )
              
@@ -132,9 +136,10 @@
              (set! screenlayer (car(gimp-layer-copy adraw FALSE)))
              
              ;add screen- and overlay- layers
-             (gimp-image-add-layer img screenlayer -1)
-             (gimp-image-add-layer img overlaylayer -1)
-             (gimp-image-add-layer img overlaylayer2 -1)
+             (gimp-message "overlay + screen")
+             (gimp-image-insert-layer img screenlayer 0 -1)
+             (gimp-image-insert-layer img overlaylayer 0 -1)
+             (gimp-image-insert-layer img overlaylayer2 0 -1)
              
              ;desaturate layers
              (gimp-desaturate screenlayer)
@@ -142,9 +147,9 @@
              (gimp-desaturate overlaylayer2)  
              
              ;give names
-             (gimp-drawable-set-name screenlayer "Screen")
-             (gimp-drawable-set-name overlaylayer "Overlay")
-             (gimp-drawable-set-name overlaylayer2 "Overlay 2")
+             (gimp-item-set-name screenlayer "Screen")
+             (gimp-item-set-name overlaylayer "Overlay")
+             (gimp-item-set-name overlaylayer2 "Overlay 2")
              
              ;set modes 
              (gimp-layer-set-mode screenlayer SCREEN-MODE)
@@ -156,6 +161,7 @@
              ;layermask for the screen layer
              (if(= screenmask TRUE)
                 (begin
+                  (gimp-message "screen mask")
                   (set! floatingsel (car (gimp-layer-create-mask screenlayer 5)))
                   (gimp-layer-add-mask screenlayer floatingsel)
                   (gimp-invert floatingsel)
@@ -166,6 +172,7 @@
              ;red
              (if(= tint 1)
                 (begin
+                  (gimp-message "red tint")
                   (gimp-colorize screenlayer   0 25 0)
                   (gimp-colorize overlaylayer  0 25 0)
                   (gimp-colorize overlaylayer2 0 25 0)
@@ -174,6 +181,7 @@
              ;blue
              (if(= tint 2)
                 (begin
+                  (gimp-message "blue tint")
                   (gimp-colorize screenlayer   225 25 0)
                   (gimp-colorize overlaylayer  225 25 0)
                   (gimp-colorize overlaylayer2 225 25 0)
@@ -184,6 +192,7 @@
              ;(gimp-image-undo-group-end img)
              ;(gimp-displays-flush)
              ;(gimp-context-pop)
+             (gimp-message "tidy up and save")
              (gimp-image-merge-visible-layers img EXPAND-AS-NECESSARY)
              (set! adraw (car (gimp-image-get-active-drawable img)))
              (gimp-file-save RUN-NONINTERACTIVE img adraw filename filename)

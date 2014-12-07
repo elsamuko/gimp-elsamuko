@@ -25,7 +25,7 @@
                             localcontrast 
                             overlay
                             blackwhite)
-  (let* ((img (car (gimp-drawable-get-image adraw)))
+  (let* ((img (car (gimp-item-get-image adraw)))
          (owidth (car (gimp-image-width img)))
          (oheight (car (gimp-image-height img)))
          (tmplayer1 0)         
@@ -70,7 +70,7 @@
        (begin
          (gimp-edit-copy-visible img)
          (set! bw-layer (car (gimp-layer-new-from-visible img img "B/W")))
-         (gimp-image-add-layer img bw-layer -1)
+         (gimp-image-insert-layer img bw-layer 0 -1)
          (gimp-desaturate-full bw-layer DESATURATE-LIGHTNESS)
          )
        )
@@ -81,13 +81,13 @@
          (gimp-edit-copy-visible img)
          (set! tmplayer1 (car (gimp-layer-new-from-visible img img "Temp 1")))
          (set! tmplayer2 (car (gimp-layer-new-from-visible img img "Temp 2")))
-         (gimp-image-add-layer img tmplayer1 -1)
-         (gimp-image-add-layer img tmplayer2 -1)
+         (gimp-image-insert-layer img tmplayer1 0 -1)
+         (gimp-image-insert-layer img tmplayer2 0 -1)
          (plug-in-unsharp-mask 1 img tmplayer1 60 localcontrast 0)
          (gimp-layer-set-mode tmplayer2 GRAIN-EXTRACT-MODE)
          (gimp-edit-copy-visible img)
          (set! contrastlayer (car (gimp-layer-new-from-visible img img "Local Contrast")))
-         (gimp-image-add-layer img contrastlayer -1)
+         (gimp-image-insert-layer img contrastlayer 0 -1)
          (gimp-layer-set-mode contrastlayer GRAIN-MERGE-MODE)
          (gimp-image-remove-layer img tmplayer1)
          (gimp-image-remove-layer img tmplayer2)
@@ -95,8 +95,8 @@
        )
     
     ;set blue and white layers
-    (gimp-image-add-layer img blue-layer -1)
-    (gimp-image-add-layer img white-layer -1)
+    (gimp-image-insert-layer img blue-layer 0 -1)
+    (gimp-image-insert-layer img white-layer 0 -1)
     (gimp-selection-all aimg)
     (gimp-context-set-foreground color1)
     (gimp-edit-bucket-fill blue-layer FG-BUCKET-FILL NORMAL-MODE 100 0 FALSE 0 0)
@@ -114,8 +114,8 @@
     ;set overlay layer
     (if(> overlay 0)
        (begin
-         (gimp-image-add-layer img overlay-layer -1)
-         (gimp-drawable-set-name overlay-layer "Overlay")
+         (gimp-image-insert-layer img overlay-layer 0 -1)
+         (gimp-item-set-name overlay-layer "Overlay")
          (gimp-layer-set-mode overlay-layer OVERLAY-MODE)
          (gimp-layer-set-opacity overlay-layer overlay)
          (gimp-desaturate-full overlay-layer DESATURATE-LIGHTNESS)
@@ -123,7 +123,7 @@
        )
     
     ;set blue overlay layer
-    (gimp-image-add-layer img blue-overlay-layer -1)
+    (gimp-image-insert-layer img blue-overlay-layer 0 -1)
     (gimp-selection-all aimg)
     (gimp-context-set-foreground color1)
     (gimp-edit-bucket-fill blue-overlay-layer FG-BUCKET-FILL NORMAL-MODE 100 0 FALSE 0 0)

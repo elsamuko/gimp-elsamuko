@@ -23,7 +23,7 @@
 
 
 (define (elsamuko-wb-puzzle aimg adraw puzzlewidth puzzleheight feathervalue)
-  (let* ((img (car (gimp-drawable-get-image adraw)))
+  (let* ((img (car (gimp-item-get-image adraw)))
          (wblayer (car (gimp-layer-copy adraw FALSE)))
          (owidth (car (gimp-image-width img)))
          (oheight (car (gimp-image-height img)))
@@ -38,7 +38,7 @@
       (let*	((startx (+ x0 (* x blockwidth))) 
                  (starty (+ y0 (* y blockheight)))
                  )
-        (gimp-rect-select aimg startx starty (+ blockwidth 0) (+ blockheight 0) CHANNEL-OP-REPLACE FALSE 0)
+        (gimp-image-select-rectangle aimg CHANNEL-OP-REPLACE startx starty (+ blockwidth 0) (+ blockheight 0))
         )
       )
     
@@ -51,7 +51,7 @@
     ;(gimp-context-set-background '(255 255 255))
     
     ;select rectangular blocks and auto white balance them
-    (gimp-image-add-layer img wblayer -1)
+    (gimp-image-insert-layer img wblayer 0 -1)
     
     (while (< iterwidth itermaxX)
            (while (< iterheight itermaxY)

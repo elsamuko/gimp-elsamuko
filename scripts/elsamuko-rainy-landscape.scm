@@ -22,7 +22,7 @@
 (define (elsamuko-rainy-landscape aimg adraw
                                   cast preserve
                                   yellow-hues red-hues)
-  (let* ((img (car (gimp-drawable-get-image adraw)))
+  (let* ((img (car (gimp-item-get-image adraw)))
          (owidth (car (gimp-image-width img)))
          (oheight (car (gimp-image-height img)))
          
@@ -50,36 +50,36 @@
         )
 
     ;add hue layer
-    (gimp-image-add-layer img hue-layer -1)
-    (gimp-drawable-set-name hue-layer "Hue: Y->G, R->Y")
+    (gimp-image-insert-layer img hue-layer 0 -1)
+    (gimp-item-set-name hue-layer "Hue: Y->G, R->Y")
     
     ;create layer mask for the cast layer
-    (gimp-image-add-layer img bw-layer -1)
-    (gimp-drawable-set-name bw-layer "B/W Filter")
+    (gimp-image-insert-layer img bw-layer 0 -1)
+    (gimp-item-set-name bw-layer "B/W Filter")
     (plug-in-colors-channel-mixer 1 img bw-layer TRUE
                                   -0.466 0.133 1.333  ;R
                                   0      0     0      ;G
                                   0      0     0 )    ;B)
     (gimp-invert bw-layer)
-    (gimp-drawable-set-visible bw-layer FALSE)
+    (gimp-item-set-visible bw-layer FALSE)
     
     ;preserve yellow
-    (gimp-image-add-layer img extract-layer -1)
-    (gimp-drawable-set-name extract-layer "Extract")
+    (gimp-image-insert-layer img extract-layer 0 -1)
+    (gimp-item-set-name extract-layer "Extract")
     (gimp-layer-set-mode extract-layer GRAIN-EXTRACT-MODE)
     (plug-in-colortoalpha 1 img extract-layer preserve)
     (gimp-edit-copy-visible img)
     (set! preserve-layer (car (gimp-layer-new-from-visible img img "Preserve Y")))
-    (gimp-image-add-layer img preserve-layer 0)
+    (gimp-image-insert-layer img preserve-layer 0 0)
     (gimp-brightness-contrast preserve-layer -90 90)
     
     (set! preserve-layer-mask (car (gimp-layer-create-mask preserve-layer ADD-COPY-MASK)))
     (gimp-layer-add-mask preserve-layer preserve-layer-mask)
-    (gimp-drawable-set-visible extract-layer FALSE)
+    (gimp-item-set-visible extract-layer FALSE)
     
     ;add cast layer
-    (gimp-image-add-layer img cast-layer -1)
-    (gimp-image-raise-layer-to-top img preserve-layer)
+    (gimp-image-insert-layer img cast-layer 0 -1)
+    (gimp-image-raise-item-to-top img preserve-layer)
     (gimp-context-set-foreground cast)
     (gimp-selection-all img)
     (gimp-edit-bucket-fill cast-layer FG-BUCKET-FILL NORMAL-MODE 100 0 FALSE 0 0)

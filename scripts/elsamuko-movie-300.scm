@@ -25,7 +25,7 @@
                             gamma multiply
                             redtint grain
                             edge extra-dark)
-  (let* ((img (car (gimp-drawable-get-image adraw)))
+  (let* ((img (car (gimp-item-get-image adraw)))
          (owidth (car (gimp-image-width img)))
          (oheight (car (gimp-image-height img)))
          (desat-layer (car (gimp-layer-copy adraw FALSE)))
@@ -83,37 +83,37 @@
         )
     
     ;some more red
-    (gimp-image-add-layer img edge-layer 0)
-    (gimp-drawable-set-name edge-layer "Edge Amp")
+    (gimp-image-insert-layer img edge-layer 0 0)
+    (gimp-item-set-name edge-layer "Edge Amp")
     (gimp-color-balance edge-layer MIDTONES TRUE 20 0 0)
     (gimp-color-balance edge-layer HIGHLIGHTS TRUE 20 0 0)
     
     (gimp-layer-set-mode edge-layer GRAIN-EXTRACT-MODE)
     (gimp-edit-copy-visible img)
     (set! red-layer (car (gimp-layer-new-from-visible img img "Red")))
-    (gimp-image-add-layer img red-layer 0)
+    (gimp-image-insert-layer img red-layer 0 0)
     (gimp-layer-set-mode red-layer GRAIN-MERGE-MODE)
     (gimp-layer-set-opacity red-layer redtint)
     (gimp-invert red-layer)
-    (gimp-drawable-set-visible edge-layer FALSE)
+    (gimp-item-set-visible edge-layer FALSE)
     
     ;set desaturated and multiply layer
-    (gimp-image-add-layer img desat-layer -1)
-    (gimp-drawable-set-name desat-layer "Desaturated")
+    (gimp-image-insert-layer img desat-layer 0 -1)
+    (gimp-item-set-name desat-layer "Desaturated")
     (gimp-layer-set-mode desat-layer NORMAL-MODE)
     (gimp-layer-set-opacity desat-layer 100)
     (gimp-hue-saturation desat-layer ALL-HUES 0 0 desaturation)
     
-    (gimp-image-add-layer img multiply-layer -1)
-    (gimp-drawable-set-name multiply-layer "Multiply 1")
+    (gimp-image-insert-layer img multiply-layer 0 -1)
+    (gimp-item-set-name multiply-layer "Multiply 1")
     (gimp-layer-set-mode multiply-layer MULTIPLY-MODE)
     (gimp-layer-set-opacity multiply-layer multiply)
     (gimp-hue-saturation multiply-layer ALL-HUES 0 0 desaturation)
     
     (if(= extra-dark TRUE)
        (begin
-         (gimp-image-add-layer img multiply-layer2 -1)
-         (gimp-drawable-set-name multiply-layer2 "Multiply 2")
+         (gimp-image-insert-layer img multiply-layer2 0 -1)
+         (gimp-item-set-name multiply-layer2 "Multiply 2")
          (gimp-layer-set-mode multiply-layer2 MULTIPLY-MODE)
          (gimp-layer-set-opacity multiply-layer2 100)
          (gimp-desaturate-full multiply-layer2 DESATURATE-LUMINOSITY)
@@ -126,40 +126,40 @@
        )
     
     ;set overlay layers
-    (gimp-image-add-layer img overlay-layer1 -1)
-    (gimp-drawable-set-name overlay-layer1 "Overlay 1")
+    (gimp-image-insert-layer img overlay-layer1 0 -1)
+    (gimp-item-set-name overlay-layer1 "Overlay 1")
     (gimp-layer-set-mode overlay-layer1 OVERLAY-MODE)
     (gimp-layer-set-opacity overlay-layer1 overlay)
     (gimp-desaturate-full overlay-layer1 DESATURATE-LUMINOSITY)
     (gimp-levels overlay-layer1 HISTOGRAM-VALUE 70 150 gamma 0 255)
     
-    (gimp-image-add-layer img overlay-layer2 -1)
-    (gimp-drawable-set-name overlay-layer2 "Overlay 2")
+    (gimp-image-insert-layer img overlay-layer2 0 -1)
+    (gimp-item-set-name overlay-layer2 "Overlay 2")
     (gimp-layer-set-mode overlay-layer2 OVERLAY-MODE)
     (gimp-layer-set-opacity overlay-layer2 overlay)
     (gimp-desaturate-full overlay-layer2 DESATURATE-LUMINOSITY)
     (gimp-levels overlay-layer2 HISTOGRAM-VALUE 70 150 gamma 0 255)
     
     ;set yellow multiply layer
-    (gimp-image-add-layer img yellow-layer -1)
+    (gimp-image-insert-layer img yellow-layer 0 -1)
     (gimp-selection-all img)
     (gimp-context-set-foreground color2)
     (gimp-edit-bucket-fill yellow-layer FG-BUCKET-FILL NORMAL-MODE 100 0 FALSE 0 0)
     
     ;set sepia grain merge layer
-    (gimp-image-add-layer img sepia-layer -1)
+    (gimp-image-insert-layer img sepia-layer 0 -1)
     (gimp-selection-all img)
     (gimp-context-set-foreground color1)
     (gimp-edit-bucket-fill sepia-layer FG-BUCKET-FILL NORMAL-MODE 100 0 FALSE 0 0)
     
     ;move red tint layer to top
-    (gimp-image-raise-layer-to-top img red-layer)
+    (gimp-image-raise-item-to-top img red-layer)
     
     ;add grain
     (if(> grain 0)
        (begin
          ;fill new layer with neutral gray
-         (gimp-image-add-layer img grain-layer -1)
+         (gimp-image-insert-layer img grain-layer 0 -1)
          (gimp-drawable-fill grain-layer TRANSPARENT-FILL)
          (gimp-context-set-foreground '(128 128 128))
          (gimp-selection-all img)
@@ -185,8 +185,8 @@
     ;edge detection
     (if(= edge TRUE)
        (begin
-         (gimp-image-raise-layer-to-top img edge-layer)
-         (gimp-drawable-set-visible edge-layer TRUE)
+         (gimp-image-raise-item-to-top img edge-layer)
+         (gimp-item-set-visible edge-layer TRUE)
          (plug-in-sobel TRUE img edge-layer TRUE TRUE TRUE)
          (gimp-levels-stretch edge-layer)
          (gimp-desaturate-full edge-layer DESATURATE-LUMINOSITY)         

@@ -22,14 +22,14 @@
 
 
 (define (elsamuko-photo-border aimg adraw aplace ashift aradius aborder_distance)
-  (let*  ((img (car (gimp-drawable-get-image adraw)))
+  (let*  ((img (car (gimp-item-get-image adraw)))
           (draw (car (gimp-layer-copy adraw FALSE)))
           (border_distance (/ aborder_distance 100))
           )
     
     ; init
     (define (script-fu-photo-border-helper aimg adraw ashift aradius border_distance)
-      (let*  ((img (car (gimp-drawable-get-image adraw)))
+      (let*  ((img (car (gimp-item-get-image adraw)))
               (owidth (car (gimp-image-width img)))
               (oheight (car (gimp-image-height img)))
               (arith_med (/ (+ owidth oheight) 2))
@@ -61,7 +61,7 @@
               )
         
         ;one layer with soft, red ending
-        (gimp-image-add-layer img soft_margin -1)
+        (gimp-image-insert-layer img soft_margin 0 -1)
         (gimp-drawable-fill soft_margin TRANSPARENT-FILL)
         
         (set! radius (* aradius oheight)) ;radius is diameter...
@@ -69,18 +69,19 @@
         (set! xcoord (- (+ (* 0.5 owidth) (* (/ ashift 100) owidth)) (/ radius 2)))
         (set! thickness (* (/ (+ oheight owidth) 2) 0.04))
         
-        (gimp-ellipse-select img xcoord ycoord radius radius ADD TRUE TRUE thickness) ;last term is feather strength
+        (gimp-image-select-ellipse img CHANNEL-OP-REPLACE xcoord ycoord radius radius)
+        (gimp-selection-feather img thickness)
         (gimp-selection-invert img)
         (gimp-context-set-foreground '(174 28 14))
         (gimp-edit-bucket-fill soft_margin FG-BUCKET-FILL NORMAL-MODE 100 0 FALSE 0 0)
         (gimp-selection-none img)
         
         ;one layer with hard, white (overexposed) ending
-        (gimp-image-add-layer img hard_margin -1)
+        (gimp-image-insert-layer img hard_margin 0 -1)
         (gimp-drawable-fill hard_margin TRANSPARENT-FILL)
         
         (set! ycoord (- ycoord (* thickness 0.65)))
-        (gimp-ellipse-select img xcoord ycoord radius radius ADD TRUE FALSE 0) ;last term is feather strength
+        (gimp-image-select-ellipse img CHANNEL-OP-REPLACE xcoord ycoord radius radius)
         (gimp-selection-invert img)
         ;(script-fu-distress-selection img hard_margin 127 8 3 2 FALSE TRUE)
         (script-fu-distress-selection img hard_margin 127 12 2 2 FALSE TRUE)

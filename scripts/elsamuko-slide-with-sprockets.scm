@@ -23,7 +23,7 @@
 
 
 (define (elsamuko-sprocketholes aimg adraw phototext dx1 dx2 font framenumber framenumberhole firstsh shcolor letteringcolor)
-  (let* ((img (car (gimp-drawable-get-image adraw)))
+  (let* ((img (car (gimp-item-get-image adraw)))
          (owidth (car (gimp-image-width img)))
          (oheight (car (gimp-image-height img))) ;35mm
          (mm (/ oheight 35)) ;1 mm
@@ -155,7 +155,7 @@
       (let*	((startx (+ x0 (* x blockwidth))) 
                  (starty (+ y0 (* y blockheight)))
                  )
-        (gimp-rect-select aimg startx starty (+ blockwidth 1) (+ blockheight 2) CHANNEL-OP-ADD FALSE 0)
+        (gimp-image-select-rectangle aimg CHANNEL-OP-ADD startx starty (+ blockwidth 1) (+ blockheight 2))
         )
       )
     
@@ -169,7 +169,7 @@
     (gimp-context-set-background '(255 255 255))
     
     ;add lettering
-    (gimp-image-add-layer img letteringlayer -1)
+    (gimp-image-insert-layer img letteringlayer 0 -1)
     (gimp-drawable-fill letteringlayer TRANSPARENT-FILL)
     (gimp-context-set-foreground letteringcolor)
     
@@ -235,15 +235,14 @@
                                      font )))
            
            ;triangle
-           (gimp-free-select img 6
+           (gimp-image-select-polygon img CHANNEL-OP-ADD 6
                              (triangle_array (+ (- distancetofirstnumber mm) (* (- framenumber (- x 0.5)) framewidth))
                                              (* 0.945 oheight)
                                              (+ (+ distancetofirstnumber (* 0.7 mm)) (* (- framenumber (- x 0.5)) framewidth))
                                              (+ (* 0.945 oheight) (* 0.75 mm))
                                              (+ (- distancetofirstnumber  mm) (* (- framenumber (- x 0.5)) framewidth))
                                              (+ (* 0.945 oheight) (* 1.5 mm))
-                                             )
-                             2 TRUE FALSE 0) 
+                                             )) 
            (gimp-edit-bucket-fill letteringlayer FG-BUCKET-FILL NORMAL-MODE 100 0 FALSE 0 0)
            (gimp-selection-none img)
            
@@ -261,19 +260,19 @@
            )
     
     ;add new layer and set sprocket holes
-    (gimp-image-add-layer img shlayer -1)
+    (gimp-image-insert-layer img shlayer 0 -1)
     (gimp-drawable-fill shlayer TRANSPARENT-FILL)
     
     (while (< holenumber (+ numberofshs 5))
            (set! x ( + distancetofirstsh (* holenumber shdistance) ))
-           (gimp-round-rect-select img x bordertosh 
+           (gimp-image-select-round-rectangle img CHANNEL-OP-ADD
+                                   x bordertosh 
                                    shwidth shheight 
-                                   shradius shradius
-                                   CHANNEL-OP-ADD TRUE FALSE 0 0)
-           (gimp-round-rect-select img x bordertosh2
+                                   shradius shradius)
+           (gimp-image-select-round-rectangle img CHANNEL-OP-ADD
+                                   x bordertosh2
                                    shwidth shheight 
-                                   shradius shradius
-                                   CHANNEL-OP-ADD TRUE FALSE 0 0)
+                                   shradius shradius)
            (set! holenumber (+ holenumber 1))
            )
     ;    (gimp-context-set-foreground letteringcolor)
@@ -283,8 +282,8 @@
     (gimp-edit-bucket-fill shlayer FG-BUCKET-FILL NORMAL-MODE 100 0 FALSE 0 0)
     
     ;smear sprocket holes
-    (gimp-image-add-layer img smearlayer -1)
-    (gimp-image-lower-layer img smearlayer)
+    (gimp-image-insert-layer img smearlayer 0 -1)
+    (gimp-image-lower-item img smearlayer)
     (gimp-drawable-fill smearlayer TRANSPARENT-FILL)
     (gimp-selection-grow img (* 0.2 mm))
     (gimp-selection-feather img (* 1 mm))
@@ -292,8 +291,8 @@
     (gimp-edit-bucket-fill smearlayer FG-BUCKET-FILL NORMAL-MODE 100 0 FALSE 0 0)
     
     (gimp-selection-grow img (* 0.2 mm))
-    (gimp-image-add-layer img smearlayer2 -1)
-    (gimp-image-lower-layer img smearlayer2)
+    (gimp-image-insert-layer img smearlayer2 0 -1)
+    (gimp-image-lower-item img smearlayer2)
     (gimp-drawable-fill smearlayer2 TRANSPARENT-FILL)
     (gimp-edit-copy adraw)
     (gimp-floating-sel-anchor (car (gimp-edit-paste smearlayer2 TRUE)))

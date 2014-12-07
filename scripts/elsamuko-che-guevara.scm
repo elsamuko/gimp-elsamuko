@@ -27,7 +27,7 @@
                               ssmooth sthreshhold
                               lsmooth lthreshhold
                               contrast edge color)
-  (let* ((img (car (gimp-drawable-get-image adraw)))
+  (let* ((img (car (gimp-item-get-image adraw)))
          (owidth (car (gimp-image-width img)))
          (oheight (car (gimp-image-height img)))
          (colorlayer (car (gimp-layer-new img
@@ -56,7 +56,7 @@
         )
     
     ;add color layer
-    (gimp-image-add-layer img colorlayer -1)
+    (gimp-image-insert-layer img colorlayer 0 -1)
     (gimp-drawable-fill colorlayer TRANSPARENT-FILL)
     (gimp-selection-all img)
     (gimp-edit-bucket-fill colorlayer FG-BUCKET-FILL NORMAL-MODE 100 0 FALSE 0 0)
@@ -65,10 +65,10 @@
     ;copy and add original image two times
     (set! shadowlayer (car (gimp-layer-copy adraw FALSE)))
     (set! lineslayer (car (gimp-layer-copy adraw FALSE)))
-    (gimp-image-add-layer img shadowlayer -1)
-    (gimp-image-add-layer img lineslayer -1)
-    (gimp-drawable-set-name shadowlayer "Shadow")
-    (gimp-drawable-set-name lineslayer "Lines")
+    (gimp-image-insert-layer img shadowlayer 0 -1)
+    (gimp-image-insert-layer img lineslayer 0 -1)
+    (gimp-item-set-name shadowlayer "Shadow")
+    (gimp-item-set-name lineslayer "Lines")
     
     ;threshhold on shadow layer
     (gimp-threshold shadowlayer sthreshhold 255)

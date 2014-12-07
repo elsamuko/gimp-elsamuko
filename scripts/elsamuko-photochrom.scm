@@ -25,7 +25,7 @@
                              contrast bw-merge
                              num1 num2
                              dodge retro)
-  (let* ((img (car (gimp-drawable-get-image adraw)))
+  (let* ((img (car (gimp-item-get-image adraw)))
          (owidth (car (gimp-image-width img)))
          (oheight (car (gimp-image-height img)))
          (offset1 (* oheight (/ num1 100)))
@@ -94,53 +94,53 @@
         )
     
     ;set extra color layer
-    (gimp-image-add-layer img lum-layer 0)
-    (gimp-drawable-set-name lum-layer "Luminosity")
+    (gimp-image-insert-layer img lum-layer 0 0)
+    (gimp-item-set-name lum-layer "Luminosity")
     (gimp-desaturate-full lum-layer DESATURATE-LIGHTNESS)
     (gimp-layer-set-mode lum-layer GRAIN-EXTRACT-MODE)
     (gimp-edit-copy-visible img)
     (set! extra-layer (car (gimp-layer-new-from-visible img img "Extra Color")))
-    (gimp-image-add-layer img extra-layer 0)
+    (gimp-image-insert-layer img extra-layer 0 0)
     (gimp-layer-set-mode extra-layer GRAIN-MERGE-MODE)
     (gimp-layer-set-opacity extra-layer 50)
-    (gimp-drawable-set-visible lum-layer FALSE)
+    (gimp-item-set-visible lum-layer FALSE)
     
     ;set BW screen layer
-    (gimp-image-add-layer img bw-screen-layer -1)
-    (gimp-drawable-set-name bw-screen-layer "BW Screen")
+    (gimp-image-insert-layer img bw-screen-layer 0 -1)
+    (gimp-item-set-name bw-screen-layer "BW Screen")
     (gimp-layer-set-mode bw-screen-layer SCREEN-MODE)
     (gimp-layer-set-opacity bw-screen-layer 50)
     (gimp-desaturate-full bw-screen-layer DESATURATE-LUMINOSITY)
     
     ;set BW merge layer
-    (gimp-image-add-layer img bw-merge-layer -1)
-    (gimp-drawable-set-name bw-merge-layer "BW Merge")
+    (gimp-image-insert-layer img bw-merge-layer 0 -1)
+    (gimp-item-set-name bw-merge-layer "BW Merge")
     (gimp-layer-set-mode bw-merge-layer GRAIN-MERGE-MODE)
     (gimp-layer-set-opacity bw-merge-layer bw-merge)
     (gimp-desaturate-full bw-merge-layer DESATURATE-LUMINOSITY)
     (gimp-curves-spline bw-merge-layer HISTOGRAM-VALUE 6 #(0 144 88 42 255 255))
     
     ;set contrast layers
-    (gimp-image-add-layer img contrast-layer1 -1)
-    (gimp-drawable-set-name contrast-layer1 "Contrast1")
+    (gimp-image-insert-layer img contrast-layer1 0 -1)
+    (gimp-item-set-name contrast-layer1 "Contrast1")
     (gimp-layer-set-mode contrast-layer1 OVERLAY-MODE)
     (gimp-layer-set-opacity contrast-layer1 contrast)
     (gimp-desaturate-full contrast-layer1 DESATURATE-LUMINOSITY)
     
-    (gimp-image-add-layer img contrast-layer2 -1)
-    (gimp-drawable-set-name contrast-layer2 "Contrast2")
+    (gimp-image-insert-layer img contrast-layer2 0 -1)
+    (gimp-item-set-name contrast-layer2 "Contrast2")
     (gimp-layer-set-mode contrast-layer2 OVERLAY-MODE)
     (gimp-layer-set-opacity contrast-layer2 contrast)
     (gimp-desaturate-full contrast-layer2 DESATURATE-LUMINOSITY)
     
     ;set dodge layer
-    (gimp-image-add-layer img dodge-layer -1)
-    (gimp-drawable-set-name dodge-layer "Dodge")
+    (gimp-image-insert-layer img dodge-layer 0 -1)
+    (gimp-item-set-name dodge-layer "Dodge")
     (gimp-layer-set-mode dodge-layer DODGE-MODE)
     (gimp-layer-set-opacity dodge-layer 50)
     
     ;set merge layer
-    (gimp-image-add-layer img merge-layer -1)
+    (gimp-image-insert-layer img merge-layer 0 -1)
     (gimp-selection-all aimg)
     (gimp-context-set-foreground color1)
     (gimp-edit-bucket-fill merge-layer FG-BUCKET-FILL NORMAL-MODE 100 0 FALSE 0 0)
@@ -154,7 +154,7 @@
                      TRUE 0 offset1 0 offset2)
     
     ;set screen layer
-    (gimp-image-add-layer img screen-layer -1)
+    (gimp-image-insert-layer img screen-layer 0 -1)
     (gimp-selection-all aimg)
     (gimp-context-set-foreground color1)
     (gimp-edit-bucket-fill screen-layer FG-BUCKET-FILL NORMAL-MODE 100 0 FALSE 0 0)
@@ -168,7 +168,7 @@
                      TRUE 0 offset1 0 offset2)
     
     ;set multiply layer
-    (gimp-image-add-layer img multiply-layer -1)
+    (gimp-image-insert-layer img multiply-layer 0 -1)
     (gimp-selection-all aimg)
     (gimp-context-set-foreground color2)
     (gimp-edit-bucket-fill multiply-layer FG-BUCKET-FILL NORMAL-MODE 100 0 FALSE 0 0)
@@ -184,7 +184,7 @@
     ;optional retro colors
     (if(= retro TRUE)(begin
                        ;yellow with mask
-                       (gimp-image-add-layer img retro-layer -1)
+                       (gimp-image-insert-layer img retro-layer 0 -1)
                        (gimp-selection-all aimg)
                        (gimp-context-set-foreground '(251 242 163))
                        (gimp-edit-bucket-fill retro-layer FG-BUCKET-FILL NORMAL-MODE 100 0 FALSE 0 0)
@@ -194,13 +194,13 @@
                        (gimp-floating-sel-anchor floatingsel)
                        
                        ;rose
-                       (gimp-image-add-layer img retro-layer2 -1)
+                       (gimp-image-insert-layer img retro-layer2 0 -1)
                        (gimp-selection-all aimg)
                        (gimp-context-set-foreground '(232 101 179))
                        (gimp-edit-bucket-fill retro-layer2 FG-BUCKET-FILL NORMAL-MODE 100 0 FALSE 0 0)
                        
                        ;gradient overlay
-                       (gimp-image-add-layer img gradient-layer -1)
+                       (gimp-image-insert-layer img gradient-layer 0 -1)
                        (gimp-context-set-foreground '(255 255 255))
                        (gimp-context-set-background '(0 0 0))
                        (gimp-edit-blend gradient-layer FG-BG-RGB-MODE
@@ -210,16 +210,16 @@
                                         TRUE 0 offset1 0 offset2)
                        
                        ;deactivate orange layers
-                       (gimp-drawable-set-visible merge-layer FALSE)
-                       (gimp-drawable-set-visible screen-layer FALSE)
-                       (gimp-drawable-set-visible multiply-layer FALSE)
+                       (gimp-item-set-visible merge-layer FALSE)
+                       (gimp-item-set-visible screen-layer FALSE)
+                       (gimp-item-set-visible multiply-layer FALSE)
                        )
        )
     
     ;dodge b/w
     (if(= dodge TRUE)(begin
                        (gimp-desaturate-full dodge-layer DESATURATE-LUMINOSITY)
-                       (gimp-drawable-set-visible extra-layer FALSE)
+                       (gimp-item-set-visible extra-layer FALSE)
                        )
        )
     

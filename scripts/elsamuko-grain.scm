@@ -23,7 +23,7 @@
 
 
 (define (elsamuko-grain aimg adraw holdness value strength grainblur blackwhite)
-  (let* ((img (car (gimp-drawable-get-image adraw)))
+  (let* ((img (car (gimp-item-get-image adraw)))
          (owidth (car (gimp-image-width img)))
          (oheight (car (gimp-image-height img)))
          (bw-layer (car (gimp-layer-copy adraw FALSE)))
@@ -65,14 +65,14 @@
     ;optional b/w
     (if(= blackwhite TRUE)
        (begin
-         (gimp-image-add-layer img bw-layer -1)
-         (gimp-drawable-set-name bw-layer "B/W")
+         (gimp-image-insert-layer img bw-layer 0 -1)
+         (gimp-item-set-name bw-layer "B/W")
          (gimp-desaturate-full bw-layer DESATURATE-LIGHTNESS)
          )
        )
     
     ;fill new layer with neutral gray
-    (gimp-image-add-layer img grainlayer -1)
+    (gimp-image-insert-layer img grainlayer 0 -1)
     (gimp-drawable-fill grainlayer TRANSPARENT-FILL)
     (gimp-context-set-foreground '(128 128 128))
     (gimp-selection-all img)

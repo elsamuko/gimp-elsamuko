@@ -25,8 +25,8 @@
 ;
 ;
 
-(define (mm1-vintage-look img	
-                          drw	
+(define (mm1-vintage-look img
+                          drw
                           VarCyan
                           VarMagenta
                           VarYellow
@@ -51,32 +51,32 @@
     ;Bleach Bypass
     (if(= Overlay TRUE)
        (begin
-         (gimp-image-add-layer img overlay-layer -1)
+         (gimp-image-insert-layer img overlay-layer 0 -1)
          (gimp-desaturate-full overlay-layer DESATURATE-LUMINOSITY)
          (plug-in-gauss TRUE img overlay-layer 1 1 TRUE)
          (plug-in-unsharp-mask 1 img overlay-layer 1 1 0)
          (gimp-layer-set-mode overlay-layer OVERLAY-MODE)
-         (gimp-drawable-set-name overlay-layer "Bleach Bypass")
+         (gimp-item-set-name overlay-layer "Bleach Bypass")
          )
        )
     
     ;Yellow Layer
     (set! yellow-layer (car (gimp-layer-new img drawable-width drawable-height RGB "Yellow" 100  MULTIPLY-MODE)))	
-    (gimp-image-add-layer img yellow-layer -1)
+    (gimp-image-insert-layer img yellow-layer 0 -1)
     (gimp-context-set-background '(251 242 163) )
     (gimp-drawable-fill yellow-layer BACKGROUND-FILL)
     (gimp-layer-set-opacity yellow-layer VarYellow)
     
     ;Magenta Layer
     (set! magenta-layer (car (gimp-layer-new img drawable-width drawable-height RGB "Magenta" 100  SCREEN-MODE)))	
-    (gimp-image-add-layer img magenta-layer -1)
+    (gimp-image-insert-layer img magenta-layer 0 -1)
     (gimp-context-set-background '(232 101 179) )
     (gimp-drawable-fill magenta-layer BACKGROUND-FILL)
     (gimp-layer-set-opacity magenta-layer VarMagenta)
     
     ;Cyan Layer 
     (set! cyan-layer (car (gimp-layer-new img drawable-width drawable-height RGB "Cyan" 100  SCREEN-MODE)))	
-    (gimp-image-add-layer img cyan-layer -1)
+    (gimp-image-insert-layer img cyan-layer 0 -1)
     (gimp-context-set-background '(9 73 233) )
     (gimp-drawable-fill cyan-layer BACKGROUND-FILL)
     (gimp-layer-set-opacity cyan-layer VarCyan)
@@ -96,7 +96,7 @@ http://registry.gimp.org/node/1348"
                     "Michael Maier info[at]mmip.net >" 
                     "(c) Michael Maier. This is GPL Free Software." 	
                     "March 3, 2008" 
-                    "*"	
+                    "*"
                     SF-IMAGE      "Image"    0
                     SF-DRAWABLE   "Drawable" 0
                     SF-ADJUSTMENT _"Cyan"    '(17 0 100 1 1 0 0)

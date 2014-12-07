@@ -42,18 +42,18 @@
         (gimp-layer-set-mode top-layer SUBTRACT-MODE)
         (gimp-edit-copy-visible img)
         (set! subtractive-layer (car (gimp-layer-new-from-visible img img "Subtractive") ))
-        (gimp-image-add-layer img subtractive-layer 0)
-        (gimp-drawable-set-visible subtractive-layer FALSE)
+        (gimp-image-insert-layer img subtractive-layer 0 0)
+        (gimp-item-set-visible subtractive-layer FALSE)
         
         ;subtract second from first
-        (gimp-image-lower-layer img top-layer)
+        (gimp-image-lower-item img top-layer)
         (gimp-layer-set-mode top-layer NORMAL-MODE)
         (gimp-layer-set-mode bottom-layer SUBTRACT-MODE)
         (gimp-edit-copy-visible img)
         (set! additive-layer (car (gimp-layer-new-from-visible img img "Additive") ))
-        (gimp-image-add-layer img additive-layer 0)    
+        (gimp-image-insert-layer img additive-layer 0 0)
         
-        (gimp-drawable-set-visible subtractive-layer TRUE)
+        (gimp-item-set-visible subtractive-layer TRUE)
         (gimp-layer-set-mode additive-layer ADDITION-MODE)
         (gimp-layer-set-mode subtractive-layer SUBTRACT-MODE)
         

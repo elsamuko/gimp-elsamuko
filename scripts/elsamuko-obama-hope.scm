@@ -33,7 +33,7 @@
                              threshold3 color3
                              threshold4 color4
                              )
-  (let* ((img (car (gimp-drawable-get-image adraw)))
+  (let* ((img (car (gimp-item-get-image adraw)))
          (owidth (car (gimp-image-width img)))
          (oheight (car (gimp-image-height img)))
          (yellowlayer (car (gimp-layer-new img
@@ -106,50 +106,50 @@
     (set! layer2 (car(gimp-layer-copy adraw FALSE)))
     (set! layer3 (car(gimp-layer-copy adraw FALSE)))
     (set! layer4 (car(gimp-layer-copy adraw FALSE)))
-    (gimp-image-add-layer img layer1 -1)
-    (gimp-image-add-layer img layer2 -1)
-    (gimp-image-add-layer img layer3 -1)
-    (gimp-image-add-layer img layer4 -1)
-    (gimp-drawable-set-name layer1 "1")
-    (gimp-drawable-set-name layer2 "2")
-    (gimp-drawable-set-name layer3 "3")
-    (gimp-drawable-set-name layer4 "4")
+    (gimp-image-insert-layer img layer1 0 -1)
+    (gimp-image-insert-layer img layer2 0 -1)
+    (gimp-image-insert-layer img layer3 0 -1)
+    (gimp-image-insert-layer img layer4 0 -1)
+    (gimp-item-set-name layer1 "1")
+    (gimp-item-set-name layer2 "2")
+    (gimp-item-set-name layer3 "3")
+    (gimp-item-set-name layer4 "4")
     
     ;add yellow color layer
     (gimp-context-set-foreground yellow)
-    (gimp-image-add-layer img yellowlayer -1)
+    (gimp-image-insert-layer img yellowlayer 0 -1)
     (gimp-drawable-fill yellowlayer TRANSPARENT-FILL)
     (gimp-selection-all img)
     (gimp-edit-bucket-fill yellowlayer FG-BUCKET-FILL NORMAL-MODE 100 0 FALSE 0 0)
     (gimp-selection-none img)
     
     ;add image layers
-    (gimp-image-add-layer img layer1b -1)
+    (gimp-image-insert-layer img layer1b 0 -1)
     (gimp-drawable-fill layer1b TRANSPARENT-FILL)
-    (gimp-image-add-layer img layer2b -1)
+    (gimp-image-insert-layer img layer2b 0 -1)
     (gimp-drawable-fill layer2b TRANSPARENT-FILL)
-    (gimp-image-add-layer img layer3b -1)
+    (gimp-image-insert-layer img layer3b 0 -1)
     (gimp-drawable-fill layer3b TRANSPARENT-FILL)
-    (gimp-image-add-layer img layer4b -1)
+    (gimp-image-insert-layer img layer4b 0 -1)
     (gimp-drawable-fill layer4b TRANSPARENT-FILL)
     
     ;stripes layer
     (gimp-threshold layer1 threshold1 255)
-    (gimp-by-color-select layer1 '(0 0 0) 0 CHANNEL-OP-REPLACE TRUE FALSE 0 FALSE)
+    (gimp-image-select-color img CHANNEL-OP-REPLACE layer1 '(0 0 0))
     (if (> corn 0)
         (gimp-selection-grow img corn)
         (gimp-selection-shrink img corn)
         )
     (gimp-context-set-pattern pattern)
     (gimp-edit-bucket-fill layer1b PATTERN-BUCKET-FILL NORMAL-MODE 100 0 FALSE 0 0)
-    (gimp-by-color-select layer1b '(0 0 0) 0 CHANNEL-OP-REPLACE TRUE FALSE 0 FALSE)
+    (gimp-image-select-color img CHANNEL-OP-REPLACE layer1b '(0 0 0))
     (gimp-context-set-foreground color1)
     (gimp-edit-bucket-fill layer1b FG-BUCKET-FILL NORMAL-MODE 100 0 FALSE 0 0)
     (gimp-selection-none img)
     
     ;2nd layer
     (gimp-threshold layer2 threshold2 255)
-    (gimp-by-color-select layer2 '(0 0 0) 0 CHANNEL-OP-REPLACE TRUE FALSE 0 FALSE)
+    (gimp-image-select-color img CHANNEL-OP-REPLACE layer2 '(0 0 0))
     (if (> corn 0)
         (gimp-selection-grow img corn)
         (gimp-selection-shrink img corn)
@@ -160,7 +160,7 @@
     
     ;3rd layer
     (gimp-threshold layer3 threshold3 255)
-    (gimp-by-color-select layer3 '(0 0 0) 0 CHANNEL-OP-REPLACE TRUE FALSE 0 FALSE)
+    (gimp-image-select-color img CHANNEL-OP-REPLACE layer3 '(0 0 0))
     (if (> corn 0)
         (gimp-selection-grow img corn)
         (gimp-selection-shrink img corn)
@@ -171,7 +171,7 @@
     
     ;4th layer
     (gimp-threshold layer4 threshold4 255)
-    (gimp-by-color-select layer4 '(0 0 0) 0 CHANNEL-OP-REPLACE TRUE FALSE 0 FALSE)
+    (gimp-image-select-color img CHANNEL-OP-REPLACE layer4 '(0 0 0))
     (if (> corn 0)
         (gimp-selection-grow img corn)
         (gimp-selection-shrink img corn)
@@ -182,7 +182,7 @@
     
     ;add frame layer
     (gimp-context-set-foreground yellow)
-    (gimp-image-add-layer img framelayer -1)
+    (gimp-image-insert-layer img framelayer 0 -1)
     (gimp-drawable-fill framelayer TRANSPARENT-FILL)
     (gimp-selection-all img)
     (gimp-selection-shrink img frame)

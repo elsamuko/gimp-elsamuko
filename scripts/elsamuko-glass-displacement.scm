@@ -39,8 +39,8 @@
         ;duplicate x-layer
         (set! x-layer (car(gimp-layer-copy gravure-layer FALSE)))
         (set! y-layer (car(gimp-layer-copy gravure-layer FALSE)))
-        (gimp-image-add-layer img x-layer 0)
-        (gimp-image-add-layer img y-layer 0)
+        (gimp-image-insert-layer img x-layer 0 0)
+        (gimp-image-insert-layer img y-layer 0 0)
         
         ;bumpmap x and y layers
         (plug-in-bump-map 1 img x-layer x-layer 180 45 2 0 0 0 0 TRUE FALSE LINEAR)
@@ -50,8 +50,8 @@
         (plug-in-displace 1 img image-layer strength strength TRUE TRUE x-layer y-layer 0)
         
         ;hide top layers
-        (gimp-drawable-set-visible x-layer FALSE)
-        (gimp-drawable-set-visible y-layer FALSE)
+        (gimp-item-set-visible x-layer FALSE)
+        (gimp-item-set-visible y-layer FALSE)
         
         ;blend x-layer slightly
         (gimp-layer-set-mode gravure-layer OVERLAY-MODE)

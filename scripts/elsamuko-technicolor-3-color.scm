@@ -31,7 +31,7 @@
                                       stretch
                                       retro
                                       extra)
-  (let* ((img          (car (gimp-drawable-get-image adraw)))
+  (let* ((img          (car (gimp-item-get-image adraw)))
          (owidth       (car (gimp-image-width img)))
          (oheight      (car (gimp-image-height img)))
          (sharpenlayer (car (gimp-layer-copy adraw FALSE)))
@@ -98,36 +98,36 @@
     ;extra color layer
     (if(= extra 1)
        (begin
-         (gimp-image-add-layer img tmplayer 0)
+         (gimp-image-insert-layer img tmplayer 0 0)
          (gimp-desaturate-full tmplayer DESATURATE-LIGHTNESS)
          (gimp-layer-set-mode tmplayer GRAIN-EXTRACT-MODE)
          (gimp-edit-copy-visible img)
          (set! extralayer (car (gimp-layer-new-from-visible img img "Extra Color") ))
-         (gimp-image-add-layer img extralayer 0)
-         (gimp-drawable-set-visible extralayer FALSE)
-         (gimp-drawable-set-visible tmplayer FALSE)
+         (gimp-image-insert-layer img extralayer 0 0)
+         (gimp-item-set-visible extralayer FALSE)
+         (gimp-item-set-visible tmplayer FALSE)
          )
        )
     
     ;hide original layer
-    (gimp-drawable-set-visible adraw FALSE)
+    (gimp-item-set-visible adraw FALSE)
     
     ;RGB filter
-    (gimp-drawable-set-name bluelayer  "Blue -> Yellow")
-    (gimp-drawable-set-name greenlayer "Green -> Magenta")
-    (gimp-drawable-set-name redlayer   "Red -> Cyan")
+    (gimp-item-set-name bluelayer  "Blue -> Yellow")
+    (gimp-item-set-name greenlayer "Green -> Magenta")
+    (gimp-item-set-name redlayer   "Red -> Cyan")
     
     
-    (gimp-image-add-layer img greenlayer -1)
-    ;(gimp-image-add-layer img greenmultiplylayer -1)
+    (gimp-image-insert-layer img greenlayer 0 -1)
+    ;(gimp-image-insert-layer img greenmultiplylayer -1)
     ;(gimp-drawable-fill greenmultiplylayer TRANSPARENT-FILL)
     
-    (gimp-image-add-layer img bluelayer  -1)
-    ;(gimp-image-add-layer img bluemultiplylayer  -1)
+    (gimp-image-insert-layer img bluelayer  0 -1)
+    ;(gimp-image-insert-layer img bluemultiplylayer  -1)
     ;(gimp-drawable-fill bluemultiplylayer  TRANSPARENT-FILL)
     
-    (gimp-image-add-layer img redlayer   -1)
-    ;(gimp-image-add-layer img redmultiplylayer   -1)
+    (gimp-image-insert-layer img redlayer   0 -1)
+    ;(gimp-image-insert-layer img redmultiplylayer   -1)
     ;(gimp-drawable-fill redmultiplylayer   TRANSPARENT-FILL)
     
     
@@ -192,7 +192,7 @@
     ;sharpness + contrast layer
     (if(> sharpen 0)
        (begin
-         (gimp-image-add-layer img sharpenlayer 0)
+         (gimp-image-insert-layer img sharpenlayer 0 0)
          (gimp-desaturate-full sharpenlayer DESATURATE-LIGHTNESS)
          (plug-in-unsharp-mask 1 img sharpenlayer 5 1 0)
          (gimp-layer-set-mode sharpenlayer OVERLAY-MODE)
@@ -206,16 +206,16 @@
     ;set extra color layer on top
     (if(= extra 1)
        (begin
-         (gimp-image-raise-layer-to-top img extralayer)
+         (gimp-image-raise-item-to-top img extralayer)
          (gimp-layer-set-mode extralayer GRAIN-MERGE-MODE)
-         (gimp-drawable-set-visible extralayer TRUE)
+         (gimp-item-set-visible extralayer TRUE)
          )
        )
     
     ;add 'retro' layer
     (if(= retro TRUE)
        (begin
-         (gimp-image-add-layer img purplelayer -1)
+         (gimp-image-insert-layer img purplelayer 0 -1)
          (gimp-drawable-fill purplelayer TRANSPARENT-FILL)
          (gimp-context-set-foreground '(62 25 55))
          (gimp-selection-all img)
@@ -224,7 +224,7 @@
          (gimp-layer-set-opacity purplelayer 80)
          (gimp-layer-set-opacity redlayer 80)
          (gimp-layer-set-opacity bluelayer 80)
-         (gimp-image-raise-layer-to-top img purplelayer)
+         (gimp-image-raise-item-to-top img purplelayer)
          )
        )
     

@@ -75,11 +75,11 @@
              )
         ;main layer
         (gimp-context-set-background colour)
-        (gimp-image-add-layer image layerCopy 0)
-        (gimp-drawable-set-name layerCopy name)
+        (gimp-image-insert-layer image layerCopy 0 0)
+        (gimp-item-set-name layerCopy name)
         
         ;overlay layer
-        (gimp-image-add-layer image newLayer 0)
+        (gimp-image-insert-layer image newLayer 0 0)
         (gimp-layer-set-mode newLayer 5)
         (gimp-edit-fill newLayer 1)
         (set! mergedLayer (car (gimp-image-merge-down image newLayer 0)))
@@ -104,7 +104,7 @@
     ;Edge Detection
     (if (= edgeDetection TRUE)
         (begin
-          (gimp-image-add-layer theImage layerEdgeDetect 1)
+          (gimp-image-insert-layer theImage layerEdgeDetect 0 1)
           (plug-in-edge 1 theImage layerEdgeDetect 2.0 1 0)
           )
         )
@@ -149,4 +149,4 @@
                     SF-TOGGLE       _"Edge Detection"     FALSE
                     )
 
-(script-fu-menu-register "tuxcomputers-split-tone" _"<Image>/Filters/Colours")
+(script-fu-menu-register "tuxcomputers-split-tone" _"<Image>/Script-Fu/Color")

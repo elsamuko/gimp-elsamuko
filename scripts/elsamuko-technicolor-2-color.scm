@@ -24,7 +24,7 @@
 
 
 (define (elsamuko-technicolor-2-color aimg adraw redpart greenpart cyanfill redfill yellowfill sharpen)
-  (let* ((img          (car (gimp-drawable-get-image adraw)))
+  (let* ((img          (car (gimp-item-get-image adraw)))
          (owidth       (car (gimp-image-width img)))
          (oheight      (car (gimp-image-height img)))
          (sharpenlayer (car (gimp-layer-copy adraw FALSE)))
@@ -54,14 +54,14 @@
         )
     (gimp-context-set-foreground '(0 0 0))
     (gimp-context-set-background '(255 255 255))
-    (gimp-drawable-set-visible adraw FALSE)
+    (gimp-item-set-visible adraw FALSE)
     
     ;red and cyan filter
-    (gimp-drawable-set-name cyanlayer "Cyan")
-    (gimp-drawable-set-name redlayer "Red")
+    (gimp-item-set-name cyanlayer "Cyan")
+    (gimp-item-set-name redlayer "Red")
     
-    (gimp-image-add-layer img redlayer -1)
-    (gimp-image-add-layer img cyanlayer -1)
+    (gimp-image-insert-layer img redlayer 0 -1)
+    (gimp-image-insert-layer img cyanlayer 0 -1)
     
     (plug-in-colors-channel-mixer 1 img redlayer TRUE
                                   red-R red-G red-B ;R
@@ -85,14 +85,14 @@
     (gimp-layer-set-mode cyanlayer MULTIPLY-MODE)
     
     ;add yellow layer
-    (gimp-image-add-layer img yellowlayer -1)
+    (gimp-image-insert-layer img yellowlayer 0 -1)
     (gimp-context-set-foreground yellowfill)
     (gimp-edit-bucket-fill yellowlayer FG-BUCKET-FILL NORMAL-MODE 100 0 FALSE 0 0)
     
     ;sharpness + contrast layer
     (if(= sharpen TRUE)
        (begin
-         (gimp-image-add-layer img sharpenlayer -1)
+         (gimp-image-insert-layer img sharpenlayer 0 -1)
          (gimp-desaturate-full sharpenlayer DESATURATE-LIGHTNESS)
          (plug-in-unsharp-mask 1 img sharpenlayer 5 1 0)
          (gimp-layer-set-mode sharpenlayer OVERLAY-MODE)

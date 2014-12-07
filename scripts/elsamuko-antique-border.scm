@@ -22,7 +22,7 @@
 ;
 
 (define (elsamuko-antique-border aimg adraw thicknesspercent radiuspercent color granularity smooth motion resize)
-  (let* ((img (car (gimp-drawable-get-image adraw)))
+  (let* ((img (car (gimp-item-get-image adraw)))
          (owidth (car (gimp-image-width img)))
          (oheight (car (gimp-image-height img)))
          ;the border has to reach a little bit into the image, if it's resized:
@@ -31,7 +31,7 @@
     
     ; init
     (define (script-fu-antique-border-helper aimg adraw thicknesspercent radiuspercent color granularity smooth motion)
-      (let* ((img (car (gimp-drawable-get-image adraw)))
+      (let* ((img (car (gimp-item-get-image adraw)))
              (owidth (car (gimp-image-width img)))
              (thickness (* owidth (/ thicknesspercent 100)))
              (radius (* owidth (/ radiuspercent 100))) 
@@ -46,14 +46,14 @@
              )
         
         ;add new layer
-        (gimp-image-add-layer img borderlayer -1)
+        (gimp-image-insert-layer img borderlayer 0 -1)
         (gimp-drawable-fill borderlayer TRANSPARENT-FILL)
         
         ;select rounded rectangle, distress and invert it
-        (gimp-round-rect-select img thickness thickness 
+        (gimp-image-select-round-rectangle img CHANNEL-OP-REPLACE
+                                thickness thickness 
                                 (- owidth (* 2 thickness)) (- oheight (* 2 thickness))
-                                radius radius
-                                CHANNEL-OP-REPLACE TRUE FALSE 0 0)
+                                radius radius)
         (if (> granularity 0)
             (script-fu-distress-selection img borderlayer 127 12 granularity smooth TRUE TRUE)
             )

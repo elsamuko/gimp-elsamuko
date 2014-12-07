@@ -51,7 +51,7 @@
                        invertA invertB
                        adv is_black
                        centerx centery aradius)
-  (let* ( (img (car (gimp-drawable-get-image adraw)))
+  (let* ( (img (car (gimp-item-get-image adraw)))
           (draw (car (gimp-layer-copy adraw FALSE))) 
           (owidth (car (gimp-image-width img)))
           (oheight (car (gimp-image-height img)))
@@ -154,8 +154,8 @@
     (gimp-image-undo-group-start img)
     (gimp-context-set-foreground '(0 0 0))
     (gimp-context-set-background '(255 255 255))
-    (gimp-image-add-layer img draw -1)
-    (gimp-drawable-set-name draw "Process Copy")
+    (gimp-image-insert-layer img draw 0 -1)
+    (gimp-item-set-name draw "Process Copy")
     
     ; adjust contrast, saturation 
     (gimp-brightness-contrast draw 0 acon)
@@ -223,21 +223,21 @@
     (if(= c41 6)(begin
                   ;Yellow Layer
                   (set! yellow-layer (car (gimp-layer-new img owidth oheight RGB "Yellow" 100  MULTIPLY-MODE)))	
-                  (gimp-image-add-layer img yellow-layer -1)
+                  (gimp-image-insert-layer img yellow-layer 0 -1)
                   (gimp-context-set-background '(251 242 163))
                   (gimp-drawable-fill yellow-layer BACKGROUND-FILL)
                   (gimp-layer-set-opacity yellow-layer 59)
                   
                   ;Magenta Layer
                   (set! magenta-layer (car (gimp-layer-new img owidth oheight RGB "Magenta" 100  SCREEN-MODE)))	
-                  (gimp-image-add-layer img magenta-layer -1)
+                  (gimp-image-insert-layer img magenta-layer 0 -1)
                   (gimp-context-set-background '(232 101 179))
                   (gimp-drawable-fill magenta-layer BACKGROUND-FILL)
                   (gimp-layer-set-opacity magenta-layer 20)
                   
                   ;Cyan Layer 
                   (set! cyan-layer (car (gimp-layer-new img owidth oheight RGB "Cyan" 100  SCREEN-MODE)))	
-                  (gimp-image-add-layer img cyan-layer -1)
+                  (gimp-image-insert-layer img cyan-layer 0 -1)
                   (gimp-context-set-background '(9 73 233))
                   (gimp-drawable-fill cyan-layer BACKGROUND-FILL)
                   (gimp-layer-set-opacity cyan-layer 17)
@@ -248,11 +248,11 @@
     (if(= c41 7)(begin
                   (set! drawA  (car (gimp-layer-copy draw FALSE)))
                   (set! drawB (car (gimp-layer-copy draw FALSE)))
-                  (gimp-image-add-layer img drawA -1)
-                  (gimp-image-add-layer img drawB -1)
+                  (gimp-image-insert-layer img drawA 0 -1)
+                  (gimp-image-insert-layer img drawB 0 -1)
                   
-                  (gimp-drawable-set-name drawA "LAB-A")
-                  (gimp-drawable-set-name drawB "LAB-B")
+                  (gimp-item-set-name drawA "LAB-A")
+                  (gimp-item-set-name drawB "LAB-B")
                   
                   ;decompose image to LAB and stretch A and B
                   (set! imgLAB (car (plug-in-decompose 1 img drawA "LAB" TRUE)))
@@ -298,8 +298,8 @@
     (if(= c41 9)(begin
                   ;Blue Layer
                   (set! blue-layer (car (gimp-layer-copy draw TRUE)))
-                  (gimp-image-add-layer img blue-layer -1)
-                  (gimp-drawable-set-name blue-layer "Blue Filter")
+                  (gimp-image-insert-layer img blue-layer 0 -1)
+                  (gimp-item-set-name blue-layer "Blue Filter")
                   (gimp-layer-set-opacity blue-layer 40)
                   (gimp-layer-set-mode blue-layer SCREEN-MODE)
                   (plug-in-colors-channel-mixer 1 img blue-layer TRUE
@@ -363,8 +363,8 @@
     ;add two blending layers
     (gimp-context-set-foreground '(0 0 0)) ;black
     (gimp-context-set-background '(255 255 255)) ;white
-    (gimp-image-add-layer img overexpo -1)
-    (gimp-image-add-layer img vignette -1)
+    (gimp-image-insert-layer img overexpo 0 -1)
+    (gimp-image-insert-layer img vignette 0 -1)
     (gimp-drawable-fill vignette TRANSPARENT-FILL)
     (gimp-drawable-fill overexpo TRANSPARENT-FILL)
     
@@ -390,7 +390,7 @@
         ( begin 
            (set! hvignette (car (gimp-layer-copy vignette 0)))
            (gimp-layer-set-opacity hvignette 80)
-           (gimp-image-add-layer img hvignette -1)
+           (gimp-image-insert-layer img hvignette 0 -1)
            (gimp-layer-resize-to-image-size hvignette)
            )
         )
@@ -407,9 +407,10 @@
     ;selecting a feathered circle, invert selection and fill up with black
     (if (= is_black TRUE) 
         ( begin 
-           (gimp-image-add-layer img black_vignette -1)
+           (gimp-image-insert-layer img black_vignette 0 -1)
            (gimp-drawable-fill black_vignette TRANSPARENT-FILL)
-           (gimp-ellipse-select img x_black y_black radius radius ADD TRUE TRUE (* radius 0.2)) ;last term is feather strength
+           (gimp-image-select-ellipse img CHANNEL-OP-REPLACE x_black y_black radius radius)
+           (gimp-selection-feather img (* radius 0.2))
            (gimp-selection-invert img)
            (gimp-context-set-foreground '(0 0 0))
            (gimp-edit-bucket-fill black_vignette FG-BUCKET-FILL NORMAL-MODE 100 0 FALSE 0 0)
@@ -421,7 +422,7 @@
     (if (> grain 0) 
         ( begin 
            ;fill new layer with neutral gray
-           (gimp-image-add-layer img grain-layer -1)
+           (gimp-image-insert-layer img grain-layer 0 -1)
            (gimp-drawable-fill grain-layer TRANSPARENT-FILL)
            (gimp-context-set-foreground '(128 128 128))
            (gimp-selection-all img)
@@ -446,11 +447,11 @@
     ;sharpness layer
     (if(> sharp 0)
        (begin
-         (if (> grain 0)(gimp-drawable-set-visible grain-layer FALSE))
+         (if (> grain 0)(gimp-item-set-visible grain-layer FALSE))
          
          (gimp-edit-copy-visible aimg)
          (set! Visible (car (gimp-layer-new-from-visible aimg aimg "Visible")))
-         (gimp-image-add-layer aimg Visible -1)
+         (gimp-image-insert-layer aimg Visible 0 -1)
          
          (set! MaskImage (car (gimp-image-duplicate aimg)))
          (set! MaskLayer (cadr (gimp-image-get-layers MaskImage)))
@@ -460,7 +461,7 @@
          (set! SharpenLayer (car (gimp-layer-copy Visible TRUE)))
          
          ;smart sharpen from here: http://registry.gimp.org/node/108
-         (gimp-image-add-layer img SharpenLayer -1)
+         (gimp-image-insert-layer img SharpenLayer 0 -1)
          (gimp-selection-all HSVImage)
          (gimp-edit-copy (aref HSVLayer 0))
          (gimp-image-delete HSVImage)
@@ -481,12 +482,12 @@
            (gimp-layer-set-opacity SharpenLayer 80)
            (gimp-layer-set-edit-mask SharpenLayer FALSE)
            )
-         (gimp-drawable-set-name SharpenLayer "Sharpen")
+         (gimp-item-set-name SharpenLayer "Sharpen")
          (gimp-image-remove-layer aimg Visible)
          (if (> grain 0)
              (begin
-               (gimp-drawable-set-visible grain-layer TRUE)
-               (gimp-image-lower-layer aimg SharpenLayer)
+               (gimp-item-set-visible grain-layer TRUE)
+               (gimp-image-lower-item aimg SharpenLayer)
                )
              )
          )

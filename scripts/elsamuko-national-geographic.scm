@@ -26,7 +26,7 @@
                                       sharpness screenopacity
                                       overlayopacity localcontrast
                                       screenmask tint)
-  (let* ((img (car (gimp-drawable-get-image adraw)))
+  (let* ((img (car (gimp-item-get-image adraw)))
          (owidth (car (gimp-image-width img)))
          (oheight (car (gimp-image-height img)))
          (overlaylayer 0)
@@ -60,10 +60,10 @@
     ;shadow recovery from here: http://registry.gimp.org/node/112
     (if(> shadowopacity 0)
        (begin
-         (gimp-image-add-layer img CopyLayer -1)
+         (gimp-image-insert-layer img CopyLayer 0 -1)
          (gimp-layer-set-mode CopyLayer ADDITION-MODE)
          (gimp-layer-set-opacity CopyLayer shadowopacity)
-         (gimp-image-add-layer img ShadowLayer -1)
+         (gimp-image-insert-layer img ShadowLayer 0 -1)
          (gimp-desaturate ShadowLayer)
          (gimp-invert ShadowLayer)
          (let* ((CopyMask (car (gimp-layer-create-mask CopyLayer ADD-WHITE-MASK)))
@@ -79,14 +79,14 @@
          (gimp-layer-set-mode ShadowLayer OVERLAY-MODE)
          (gimp-layer-set-opacity ShadowLayer shadowopacity)
          (gimp-image-remove-layer img CopyLayer)
-         (gimp-drawable-set-name ShadowLayer "Shadow Recovery")
+         (gimp-item-set-name ShadowLayer "Shadow Recovery")
          )
        )
     
     ;smart sharpen from here: http://registry.gimp.org/node/108
     (if(> sharpness 0)
        (begin
-         (gimp-image-add-layer img SharpenLayer -1)
+         (gimp-image-insert-layer img SharpenLayer 0 -1)
          (gimp-selection-all HSVImage)
          (gimp-edit-copy (aref HSVLayer 0))
          (gimp-image-delete HSVImage)
@@ -107,7 +107,7 @@
            (gimp-layer-set-opacity SharpenLayer 80)
            (gimp-layer-set-edit-mask SharpenLayer FALSE)
            )
-         (gimp-drawable-set-name SharpenLayer "Sharpen")
+         (gimp-item-set-name SharpenLayer "Sharpen")
          )
        )
     
@@ -117,13 +117,13 @@
          (gimp-edit-copy-visible img)
          (set! tmplayer1 (car (gimp-layer-new-from-visible img img "Temp 1")))
          (set! tmplayer2 (car (gimp-layer-new-from-visible img img "Temp 2")))
-         (gimp-image-add-layer img tmplayer1 -1)
-         (gimp-image-add-layer img tmplayer2 -1)
+         (gimp-image-insert-layer img tmplayer1 0 -1)
+         (gimp-image-insert-layer img tmplayer2 0 -1)
          (plug-in-unsharp-mask 1 img tmplayer1 60 localcontrast 0)
          (gimp-layer-set-mode tmplayer2 GRAIN-EXTRACT-MODE)
          (gimp-edit-copy-visible img)
          (set! contrastlayer (car (gimp-layer-new-from-visible img img "Local Contrast")))
-         (gimp-image-add-layer img contrastlayer -1)
+         (gimp-image-insert-layer img contrastlayer 0 -1)
          (gimp-layer-set-mode contrastlayer GRAIN-MERGE-MODE)
          (gimp-image-remove-layer img tmplayer1)
          (gimp-image-remove-layer img tmplayer2)
@@ -137,9 +137,9 @@
     (set! screenlayer (car (gimp-layer-new-from-visible img img "Screen")))
     
     ;add screen- and overlay- layers
-    (gimp-image-add-layer img screenlayer -1)
-    (gimp-image-add-layer img overlaylayer -1)
-    (gimp-image-add-layer img overlaylayer2 -1)
+    (gimp-image-insert-layer img screenlayer 0 -1)
+    (gimp-image-insert-layer img overlaylayer 0 -1)
+    (gimp-image-insert-layer img overlaylayer2 0 -1)
     
     ;desaturate layers
     (gimp-desaturate screenlayer)

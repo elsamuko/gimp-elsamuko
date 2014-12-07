@@ -22,7 +22,7 @@
 ;
 
 (define (elsamuko-escape-lines aimg adraw x0 y0 phi1 phi2 dphi1 number length roffset randomness xoffset yoffset aoffset color)
-  (let* ((img (car (gimp-drawable-get-image adraw)))
+  (let* ((img (car (gimp-item-get-image adraw)))
          (owidth (car (gimp-image-width img)))
          (oheight (car (gimp-image-height img)))
          (coord (cons-array 4 'double))
@@ -72,11 +72,10 @@
            (set! x3 (+ x0 (* length  (cos (/ (* (+ phi1 dphi1)       *pi*) 180)) )))
            (set! y3 (+ y0 (* length  (sin (/ (* (+ phi1 dphi1)       *pi*) 180)) )))
            
-           (gimp-free-select img 6
+           (gimp-image-select-polygon img CHANNEL-OP-ADD 6
                              (triangle_array x1 y1
                                              x2 y2
-                                             x3 y3)
-                             CHANNEL-OP-ADD TRUE FALSE 0) 
+                                             x3 y3)) 
            (set! phi1 (+ phi1 dphi2))
            (set! iter (+ iter 1))
            )

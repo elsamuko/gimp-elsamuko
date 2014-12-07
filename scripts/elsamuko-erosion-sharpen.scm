@@ -38,37 +38,37 @@
     (gimp-image-undo-group-start img)
     
     ; add and blur copy
-    (gimp-image-add-layer img blurred-layer -1)
-    (gimp-drawable-set-name blurred-layer "Blurred")
+    (gimp-image-insert-layer img blurred-layer 0 -1)
+    (gimp-item-set-name blurred-layer "Blurred")
     (plug-in-gauss TRUE img blurred-layer gauss_blur gauss_blur TRUE)
     
     ; subtract first from second
     (gimp-layer-set-mode blurred-layer SUBTRACT-MODE)
     (gimp-edit-copy-visible img)
     (set! subtractive-layer (car (gimp-layer-new-from-visible img img "Subtractive") ))
-    (gimp-image-add-layer img subtractive-layer 0)
-    (gimp-drawable-set-visible subtractive-layer FALSE)
+    (gimp-image-insert-layer img subtractive-layer 0 0)
+    (gimp-item-set-visible subtractive-layer FALSE)
     
     ; subtract second from first
-    (gimp-image-lower-layer img blurred-layer)
+    (gimp-image-lower-item img blurred-layer)
     (gimp-layer-set-mode blurred-layer NORMAL-MODE)
     (gimp-layer-set-mode draw SUBTRACT-MODE)
     (gimp-edit-copy-visible img)
     (set! additive-layer (car (gimp-layer-new-from-visible img img "Additive") ))
-    (gimp-image-add-layer img additive-layer 0)    
+    (gimp-image-insert-layer img additive-layer 0 0)    
     
     ; set modes back to normal
-    (gimp-drawable-set-visible subtractive-layer TRUE)
+    (gimp-item-set-visible subtractive-layer TRUE)
     (gimp-layer-set-mode draw NORMAL-MODE)
     
     ; add and erode copy
-    (gimp-image-add-layer img erode-layer -1)
-    (gimp-drawable-set-name erode-layer "Erode")
+    (gimp-image-insert-layer img erode-layer 0 -1)
+    (gimp-item-set-name erode-layer "Erode")
     (plug-in-vpropagate TRUE img erode-layer 1 1 0.7 15 0 255)
     
     ; add and dilate copy
-    (gimp-image-add-layer img dilate-layer -1)
-    (gimp-drawable-set-name dilate-layer "Dilate")
+    (gimp-image-insert-layer img dilate-layer 0 -1)
+    (gimp-item-set-name dilate-layer "Dilate")
     (plug-in-vpropagate TRUE img dilate-layer 0 1 0.7 15 0 255)
     
     ; add layer masks

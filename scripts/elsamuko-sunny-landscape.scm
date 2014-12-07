@@ -27,7 +27,7 @@
                                   sunshine sky
                                   num1 num2
                                   wb)
-  (let* ((img (car (gimp-drawable-get-image adraw)))
+  (let* ((img (car (gimp-item-get-image adraw)))
          (owidth (car (gimp-image-width img)))
          (oheight (car (gimp-image-height img)))
          
@@ -107,22 +107,22 @@
     ;extra color layer (not yet used)
     (if(= extra 1)
        (begin
-         (gimp-image-add-layer img extract-layer 0)
+         (gimp-image-insert-layer img extract-layer 0 0)
          (gimp-desaturate-full extract-layer DESATURATE-LIGHTNESS)
          (gimp-layer-set-mode extract-layer GRAIN-EXTRACT-MODE)
          (gimp-edit-copy-visible img)
          (set! color-layer (car (gimp-layer-new-from-visible img img "Color") ))
-         (gimp-image-add-layer img color-layer 0)
+         (gimp-image-insert-layer img color-layer 0 0)
          (gimp-layer-set-mode color-layer GRAIN-MERGE-MODE)
-         (gimp-drawable-set-visible color-layer FALSE)
+         (gimp-item-set-visible color-layer FALSE)
          (gimp-image-remove-layer img extract-layer)
          )
        )
     
     ;sharpen + adjust contrast
-    (gimp-image-add-layer img working-layer -1)
+    (gimp-image-insert-layer img working-layer 0 -1)
     (if(> sharpen 0) (plug-in-unsharp-mask 1 img working-layer 1 sharpen 5))
-    (gimp-drawable-set-name working-layer "Process Copy")
+    (gimp-item-set-name working-layer "Process Copy")
     (gimp-curves-spline working-layer HISTOGRAM-VALUE 8 (spline-brightness))
     
     ;hues
@@ -131,13 +131,13 @@
     
     ;desaturate a bit
     (set! desat-layer (car (gimp-layer-copy working-layer FALSE)))
-    (gimp-image-add-layer img desat-layer -1)
-    (gimp-drawable-set-name desat-layer "Desaturate")
+    (gimp-image-insert-layer img desat-layer 0 -1)
+    (gimp-item-set-name desat-layer "Desaturate")
     (gimp-desaturate-full desat-layer DESATURATE-LIGHTNESS)
     (gimp-layer-set-opacity desat-layer desat)
     
     ;add some sunshine
-    (gimp-image-add-layer img overlay-layer -1)
+    (gimp-image-insert-layer img overlay-layer 0 -1)
     (gimp-context-set-foreground sunshine)
     (gimp-selection-all img)
     (gimp-edit-bucket-fill overlay-layer FG-BUCKET-FILL NORMAL-MODE 100 0 FALSE 0 0)
@@ -149,7 +149,7 @@
     (gimp-selection-none img)
     
     ;add 1st artificial sky
-    (gimp-image-add-layer img sub-blue-layer -1)
+    (gimp-image-insert-layer img sub-blue-layer 0 -1)
     (gimp-selection-all aimg)
     (gimp-context-set-foreground sky)
     (gimp-edit-blend sub-blue-layer FG-TRANSPARENT-MODE
@@ -164,7 +164,7 @@
     (gimp-selection-none img)
     
     ;add clouds
-    (gimp-image-add-layer img cloud-layer -1)
+    (gimp-image-insert-layer img cloud-layer 0 -1)
     (gimp-edit-copy working-layer)
     (gimp-layer-add-mask cloud-layer cloud-layer-mask)
     (gimp-floating-sel-anchor (car (gimp-edit-paste cloud-layer-mask TRUE)))
@@ -185,7 +185,7 @@
                      TRUE 0 offset1 0 offset2)
     
     ;add 2nd artificial sky
-    (gimp-image-add-layer img top-blue-layer -1)
+    (gimp-image-insert-layer img top-blue-layer 0 -1)
     (gimp-edit-copy sub-blue-layer)
     (gimp-floating-sel-anchor (car (gimp-edit-paste top-blue-layer TRUE)))
     (gimp-layer-add-mask top-blue-layer top-blue-layer-mask)
@@ -195,8 +195,8 @@
     ;more color (not yet used)
     (if(= extra 1)
        (begin
-         (gimp-image-raise-layer-to-top img color-layer)
-         (gimp-drawable-set-visible color-layer TRUE)
+         (gimp-image-raise-item-to-top img color-layer)
+         (gimp-item-set-visible color-layer TRUE)
          )
        )
     
@@ -206,13 +206,13 @@
          (gimp-edit-copy-visible img)
          (set! tmplayer1 (car (gimp-layer-new-from-visible img img "Temp 1")))
          (set! tmplayer2 (car (gimp-layer-new-from-visible img img "Temp 2")))
-         (gimp-image-add-layer img tmplayer1 -1)
-         (gimp-image-add-layer img tmplayer2 -1)
+         (gimp-image-insert-layer img tmplayer1 0 -1)
+         (gimp-image-insert-layer img tmplayer2 0 -1)
          (gimp-levels-stretch tmplayer1)
          (gimp-layer-set-mode tmplayer2 GRAIN-EXTRACT-MODE)
          (gimp-edit-copy-visible img)
          (set! wb-layer (car (gimp-layer-new-from-visible img img "White Balance")))
-         (gimp-image-add-layer img wb-layer -1)
+         (gimp-image-insert-layer img wb-layer 0 -1)
          (gimp-layer-set-mode wb-layer GRAIN-MERGE-MODE)
          (gimp-image-remove-layer img tmplayer1)
          (gimp-image-remove-layer img tmplayer2)

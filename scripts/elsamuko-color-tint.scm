@@ -21,7 +21,7 @@
 
 
 (define (elsamuko-color-tint aimg adraw color opacity saturation blackwhite)
-  (let* ((img (car (gimp-drawable-get-image adraw)))
+  (let* ((img (car (gimp-item-get-image adraw)))
          (owidth (car (gimp-image-width img)))
          (oheight (car (gimp-image-height img)))
          (tint-layer 0)
@@ -58,8 +58,8 @@
     
     ;add tint layer and filter color
     (set! tmp-layer (car (gimp-layer-copy copy-layer FALSE)))
-    (gimp-drawable-set-name tmp-layer "Temp")
-    (gimp-image-add-layer imgTMP tmp-layer -1)
+    (gimp-item-set-name tmp-layer "Temp")
+    (gimp-image-insert-layer imgTMP tmp-layer 0 -1)
     (plug-in-colors-channel-mixer 1 img tmp-layer TRUE
                                   red blue green ;R
                                   0 0 0 ;G
@@ -76,10 +76,10 @@
     (gimp-edit-bucket-fill tmp-layer FG-BUCKET-FILL NORMAL-MODE 100 0 FALSE 0 0)
     
     ;get visible and add to original
-    (gimp-drawable-set-visible copy-layer FALSE)
+    (gimp-item-set-visible copy-layer FALSE)
     (gimp-edit-copy-visible imgTMP)
     (set! tint-layer (car (gimp-layer-new-from-visible imgTMP img "Tint") ))
-    (gimp-image-add-layer img tint-layer 0)
+    (gimp-image-insert-layer img tint-layer 0 0)
     
     ;set modes
     (gimp-layer-set-mode tint-layer SCREEN-MODE)
