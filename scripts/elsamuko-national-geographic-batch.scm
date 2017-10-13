@@ -23,9 +23,9 @@
 ;
 ;
 ; This is the batch version of the NG script, run it with
-; gimp -i -b '(elsamuko-national-geographic-batch "picture.jpg" 60 1 60 25 0.4 1)' -b '(gimp-quit 0)'
+; gimp -i -b '(elsamuko-national-geographic-batch "picture.jpg" 60 1 60 25 0.4 1 0)' -b '(gimp-quit 0)'
 ; or for more than one picture
-; gimp -i -b '(elsamuko-national-geographic-batch "*.jpg" 60 1 60 25 0.4 1)' -b '(gimp-quit 0)'
+; gimp -i -b '(elsamuko-national-geographic-batch "*.jpg" 60 1 60 25 0.4 1 0)' -b '(gimp-quit 0)'
 
 
 (define (elsamuko-national-geographic-batch pattern shadowopacity
@@ -47,7 +47,6 @@
                   (tmplayer2 0)         
                   (floatingsel 0)
                   
-                  (CopyLayer (car (gimp-layer-copy adraw TRUE)))
                   (ShadowLayer (car (gimp-layer-copy adraw TRUE)))         
                   
                   (MaskImage (car (gimp-image-duplicate img)))
@@ -72,25 +71,17 @@
              (if(> shadowopacity 0)
                 (begin
                   (gimp-message "shadow revovery")
-                  (gimp-image-insert-layer img CopyLayer 0 -1)
-                  (gimp-layer-set-mode CopyLayer ADDITION-MODE)
-                  (gimp-layer-set-opacity CopyLayer shadowopacity)
                   (gimp-image-insert-layer img ShadowLayer 0 -1)
                   (gimp-desaturate ShadowLayer)
                   (gimp-invert ShadowLayer)
-                  (let* ((CopyMask (car (gimp-layer-create-mask CopyLayer ADD-WHITE-MASK)))
-                         (ShadowMask (car (gimp-layer-create-mask ShadowLayer ADD-WHITE-MASK)))
-                         )
-                    (gimp-layer-add-mask CopyLayer CopyMask)
+                  (let* ((ShadowMask (car (gimp-layer-create-mask ShadowLayer ADD-WHITE-MASK))))
                     (gimp-layer-add-mask ShadowLayer ShadowMask)
                     (gimp-selection-all img)
                     (gimp-edit-copy ShadowLayer)
-                    (gimp-floating-sel-anchor (car (gimp-edit-paste CopyMask TRUE)))
                     (gimp-floating-sel-anchor (car (gimp-edit-paste ShadowMask TRUE)))
                     )
                   (gimp-layer-set-mode ShadowLayer OVERLAY-MODE)
                   (gimp-layer-set-opacity ShadowLayer shadowopacity)
-                  (gimp-image-remove-layer img CopyLayer)
                   (gimp-item-set-name ShadowLayer "Shadow Recovery")
                   )
                 )
