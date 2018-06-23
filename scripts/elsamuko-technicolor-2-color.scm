@@ -21,6 +21,10 @@
 ; Version 0.1 - Simulating the 2 color technicolor
 ; Version 0.2 - Some decomposing options
 ;
+; To run the batch version of this script, run it with
+; gimp -i -b '(elsamuko-technicolor-2-color-batch "picture.jpg" 0.97 FALSE 1 0.5 0 255 255 255 0 0 255 255 0 TRUE)' -b '(gimp-quit 0)'
+; or for more than one picture
+; gimp -i -b '(elsamuko-technicolor-2-color-batch "*.jpg" 0.97 FALSE 1 0.5 0 255 255 255 0 0 255 255 0 TRUE)' -b '(gimp-quit 0)'
 
 
 (define (elsamuko-technicolor-2-color aimg adraw redpart greenpart cyanfill redfill yellowfill sharpen)
@@ -105,6 +109,43 @@
     (gimp-image-undo-group-end img)
     (gimp-displays-flush)
     (gimp-context-pop)
+    )
+  )
+
+(define (elsamuko-technicolor-2-color-batch pattern quality overwrite
+                                            redpart greenpart
+                                            cyanfill_R cyanfill_G cyanfill_B
+                                            redfill_R redfill_G redfill_B
+                                            yellowfill_R yellowfill_G yellowfill_B
+                                            sharpen)
+  (gimp-message (string-append "Pattern: " pattern))
+  (let* ((filelist (cadr (file-glob pattern 1))))
+    (while (not (null? filelist))
+           (let* ((filename (car filelist))
+                  (fileparts (strbreakup filename "."))
+                  (img (car (gimp-file-load RUN-NONINTERACTIVE filename filename)))
+                  (adraw (car (gimp-image-get-active-drawable img)))
+                  )
+             (gimp-message (string-append "Filename: " filename))
+
+             (gimp-message "Calling elsamuko-technicolor-2-color")
+             (elsamuko-technicolor-2-color img adraw redpart greenpart
+                                           (list cyanfill_R cyanfill_G cyanfill_B)
+                                           (list redfill_R redfill_G redfill_B)
+                                           (list yellowfill_R yellowfill_G yellowfill_B)
+                                           sharpen)
+
+             (gimp-image-merge-visible-layers img EXPAND-AS-NECESSARY)
+             (set! adraw (car (gimp-image-get-active-drawable img)))
+
+             (gimp-message "Saving")
+             (if (= overwrite TRUE)
+                 (file-jpeg-save RUN-NONINTERACTIVE img adraw filename filename quality 0 1 0 "" 0 1 0 1)
+                 (file-jpeg-save RUN-NONINTERACTIVE img adraw (string-append (car fileparts) "-Technicolor2.jpg") (string-append (car fileparts) "-Technicolor2.jpg") quality 0 1 0 "" 0 1 0 1))
+             (gimp-image-delete img)
+             (set! filelist (cdr filelist))
+             )
+           )
     )
   )
 
