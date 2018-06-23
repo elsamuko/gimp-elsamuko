@@ -294,52 +294,58 @@
                   )
        )
     
-    ;redscale
+    ;pink shadow
     (if(= c41 9)(begin
-                  ;Blue Layer
-                  (set! blue-layer (car (gimp-layer-copy draw TRUE)))
-                  (gimp-image-insert-layer img blue-layer 0 -1)
-                  (gimp-item-set-name blue-layer "Blue Filter")
-                  (gimp-layer-set-opacity blue-layer 40)
-                  (gimp-layer-set-mode blue-layer SCREEN-MODE)
-                  (plug-in-colors-channel-mixer 1 img blue-layer TRUE
-                                                0 0 1 ;R
-                                                0 0 0 ;G
-                                                0 0 0 ;B
-                                                )
-                  (set! blue-layer-mask (car (gimp-layer-create-mask blue-layer ADD-COPY-MASK)))
-                  (gimp-layer-add-mask blue-layer blue-layer-mask)
-                  
-                  (gimp-context-set-background '(0 0 255))
-                  (gimp-drawable-fill blue-layer BACKGROUND-FILL)
-                  
-                  (gimp-curves-spline draw HISTOGRAM-RED   6 #(0 0 127 190 255 255))
-                  (gimp-curves-spline draw HISTOGRAM-GREEN 6 #(0 0 127  62 240 255))
-                  (gimp-curves-spline draw HISTOGRAM-BLUE  4 #(0 0 255 0))
+                  (gimp-curves-spline draw  HISTOGRAM-GREEN 4 #(30 0 255 255))
                   )
+       )
+
+    ;redscale
+    (if(= c41 10)(begin
+                   ;Blue Layer
+                   (set! blue-layer (car (gimp-layer-copy draw TRUE)))
+                   (gimp-image-insert-layer img blue-layer 0 -1)
+                   (gimp-item-set-name blue-layer "Blue Filter")
+                   (gimp-layer-set-opacity blue-layer 40)
+                   (gimp-layer-set-mode blue-layer SCREEN-MODE)
+                   (plug-in-colors-channel-mixer 1 img blue-layer TRUE
+                                                 0 0 1 ;R
+                                                 0 0 0 ;G
+                                                 0 0 0 ;B
+                                                 )
+                   (set! blue-layer-mask (car (gimp-layer-create-mask blue-layer ADD-COPY-MASK)))
+                   (gimp-layer-add-mask blue-layer blue-layer-mask)
+                   
+                   (gimp-context-set-background '(0 0 255))
+                   (gimp-drawable-fill blue-layer BACKGROUND-FILL)
+                   
+                   (gimp-curves-spline draw HISTOGRAM-RED   6 #(0 0 127 190 255 255))
+                   (gimp-curves-spline draw HISTOGRAM-GREEN 6 #(0 0 127  62 240 255))
+                   (gimp-curves-spline draw HISTOGRAM-BLUE  4 #(0 0 255 0))
+                   )
        )
     
     ;retro bw
-    (if(= c41 10)(begin
-                  (gimp-desaturate-full draw DESATURATE-LUMINOSITY)
-                  ;(gimp-curves-spline draw HISTOGRAM-RED   4 #(0 15 255 255))
-                  (gimp-curves-spline draw HISTOGRAM-BLUE  4 #(0 0 255 230))
-                  (gimp-curves-spline draw HISTOGRAM-VALUE 8 #(0 0 63 52 191 202 255 255))
-                  )
+    (if(= c41 11)(begin
+                   (gimp-desaturate-full draw DESATURATE-LUMINOSITY)
+                   ;(gimp-curves-spline draw HISTOGRAM-RED   4 #(0 15 255 255))
+                   (gimp-curves-spline draw HISTOGRAM-BLUE  4 #(0 0 255 230))
+                   (gimp-curves-spline draw HISTOGRAM-VALUE 8 #(0 0 63 52 191 202 255 255))
+                   )
        )
     
     ;paynes bw
-    (if(= c41 11)(begin
-                  (gimp-desaturate-full draw DESATURATE-LUMINOSITY)
-                  (gimp-colorize draw 215 11 0)
-                  )
+    (if(= c41 12)(begin
+                   (gimp-desaturate-full draw DESATURATE-LUMINOSITY)
+                   (gimp-colorize draw 215 11 0)
+                   )
        )
     
     ;sepia
-    (if(= c41 12)(begin
-                  (gimp-desaturate-full draw DESATURATE-LUMINOSITY)
-                  (gimp-colorize draw 30 25 0)
-                  )
+    (if(= c41 13)(begin
+                   (gimp-desaturate-full draw DESATURATE-LUMINOSITY)
+                   (gimp-colorize draw 30 25 0)
+                   )
        )
     
     ;set some funky colors
@@ -527,6 +533,7 @@ Latest version can be downloaded from http://registry.gimp.org/node/7870"
                                                              "Vintage"
                                                              "Xpro LAB"
                                                              "Light Blue"
+                                                             "Pink Shadow"
                                                              "Redscale"
                                                              "Retro B/W"
                                                              "Paynes B/W"
