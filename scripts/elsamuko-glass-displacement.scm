@@ -43,11 +43,11 @@
         (gimp-image-insert-layer img y-layer 0 0)
         
         ;bumpmap x and y layers
-        (plug-in-bump-map 1 img x-layer x-layer 180 45 2 0 0 0 0 TRUE FALSE LINEAR)
-        (plug-in-bump-map 1 img y-layer y-layer  90 45 2 0 0 0 0 TRUE FALSE LINEAR)
+        (plug-in-bump-map 1 img x-layer x-layer 180 45 2 0 0 0 0 TRUE FALSE 0)
+        (plug-in-bump-map 1 img y-layer y-layer  90 45 2 0 0 0 0 TRUE FALSE 0)
         
         ;displacement
-        (plug-in-displace 1 img image-layer strength strength TRUE TRUE x-layer y-layer 0)
+        (plug-in-displace 1 img image-layer strength strength TRUE TRUE x-layer y-layer 1)
         
         ;hide top layers
         (gimp-item-set-visible x-layer FALSE)

@@ -167,7 +167,7 @@
          (gimp-selection-none img)
          
          ;add grain and blur it
-         (plug-in-scatter-hsv 1 img grain-layer 2 0 0 100)
+         (plug-in-hsv-noise 1 img grain-layer 2 0 0 100)
          (plug-in-gauss 1 img grain-layer 0.5 0.5 1)
          (gimp-layer-add-mask grain-layer grain-layer-mask)
          

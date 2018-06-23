@@ -80,7 +80,7 @@
     (gimp-selection-none img)
     
     ;add grain and blur it
-    (plug-in-scatter-hsv 1 img grainlayer holdness 0 0 value)
+    (plug-in-hsv-noise 1 img grainlayer holdness 0 0 value)
     (if(> grainblur 0)
        (begin
          (plug-in-gauss 1 img grainlayer grainblur grainblur 1)
