@@ -79,7 +79,11 @@
         ;one layer with hard, white (overexposed) ending
         (gimp-image-insert-layer img hard_margin 0 -1)
         (gimp-drawable-fill hard_margin TRANSPARENT-FILL)
-        
+
+        ; make taller to prevent mblur leaking on top
+        (gimp-layer-resize hard_margin owidth (+ oheight thickness) 0 thickness)
+        (gimp-image-resize img owidth (+ oheight thickness) 0 thickness)
+
         (set! ycoord (- ycoord (* thickness 0.65)))
         (gimp-image-select-ellipse img CHANNEL-OP-REPLACE xcoord ycoord radius radius)
         (gimp-selection-invert img)
@@ -93,6 +97,10 @@
         (plug-in-unsharp-mask 1 img hard_margin 5 2 0)
         (plug-in-unsharp-mask 1 img hard_margin 2 1 0)
         (plug-in-gauss 1 img hard_margin 1 1 1)
+
+        ; reset to oheight again
+        (gimp-layer-resize hard_margin owidth oheight 0 (- 0 thickness))
+        (gimp-image-resize img owidth oheight 0 (- 0 thickness))
         )
       )
     
