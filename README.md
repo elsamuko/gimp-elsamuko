@@ -1,7 +1,7 @@
 gimp-elsamuko
 =============
 
-Put the *.scm files in the GIMP scripts folder (~/.gimp-2.8/scripts/) and refresh scripts (<Image>/Filters/Script-Fu/Refresh Scripts) or restart GIMP.
+Put the *.scm files in the GIMP scripts folder (~/.config/GIMP/2.10/scripts/) and refresh scripts (<Image>/Filters/Script-Fu/Refresh Scripts) or restart GIMP.
 You will find the scripts then at these places in the GIMP image menu:
 (for SCM in *.scm; do echo "$SCM :"; tail -n1 "$SCM" | grep -Po '(?<=\<Image\>)[^"]*'; echo; done)
 
@@ -75,7 +75,7 @@ mm1-vintage-look.scm :
 /Filters/Artistic
 
 tuxcomputers-split-tone.scm :
-/Filters/Colours
+/Script-Fu/Color
 
 Happy gimping!
 elsamuko
