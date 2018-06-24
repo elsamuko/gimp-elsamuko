@@ -21,6 +21,10 @@
 ; Version 0.1 - Simulate a high quality photo like these from the National Geographic
 ;               Thanks to Martin Egger <martin.egger@gmx.net> for the shadow revovery and the sharpen script
 ;
+; This is the batch version of the NG script, run it with
+; gimp -i -b '(elsamuko-national-geographic-batch "picture.jpg" 60 1 60 25 0.4 1 0)' -b '(gimp-quit 0)'
+; or for more than one picture
+; gimp -i -b '(elsamuko-national-geographic-batch "*.jpg" 60 1 60 25 0.4 1 0)' -b '(gimp-quit 0)'
 
 (define (elsamuko-national-geographic aimg adraw shadowopacity
                                       sharpness screenopacity
@@ -176,6 +180,38 @@
     (gimp-image-undo-group-end img)
     (gimp-displays-flush)
     (gimp-context-pop)
+    )
+  )
+
+(define (elsamuko-national-geographic-batch pattern shadowopacity
+                                            sharpness screenopacity
+                                            overlayopacity localcontrast
+                                            screenmask tint)
+  (gimp-message (string-append "Pattern: " pattern))
+  (let* ((filelist (cadr (file-glob pattern 1))))
+    (while (not (null? filelist))
+           (let* ((filename (car filelist))
+                  (fileparts (strbreakup filename "."))
+                  (img (car (gimp-file-load RUN-NONINTERACTIVE filename filename)))
+                  (adraw (car (gimp-image-get-active-drawable img)))
+                  )
+             (gimp-message (string-append "Filename: " filename))
+
+             (gimp-message "Calling elsamuko-national-geographic")
+             (elsamuko-national-geographic img adraw shadowopacity
+                                           sharpness screenopacity
+                                           overlayopacity localcontrast
+                                           screenmask tint)
+
+             (gimp-image-merge-visible-layers img EXPAND-AS-NECESSARY)
+             (set! adraw (car (gimp-image-get-active-drawable img)))
+
+             (gimp-message "Saving")
+             (gimp-file-save RUN-NONINTERACTIVE img adraw filename filename)
+             (gimp-image-delete img)
+             (set! filelist (cdr filelist))
+             )
+           )
     )
   )
 
