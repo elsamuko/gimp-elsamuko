@@ -250,11 +250,11 @@
              (gimp-message (string-append "Filename: " filename))
 
              (gimp-message "Calling elsamuko-photochrom")
-             (elsamuko-photochrom aimg adraw
-                             color1 color2
-                             contrast bw-merge
-                             num1 num2
-                             dodge retro)
+             (elsamuko-photochrom img adraw
+                                  color1 color2
+                                  contrast bw-merge
+                                  num1 num2
+                                  dodge retro)
 
              (gimp-image-merge-visible-layers img EXPAND-AS-NECESSARY)
              (set! adraw (car (gimp-image-get-active-drawable img)))
