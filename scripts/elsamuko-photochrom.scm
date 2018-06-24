@@ -18,6 +18,10 @@
 ;
 ; Copyright (C) 2010 elsamuko <elsamuko@web.de>
 ;
+; This is the batch version of the photochrom script, run it with
+; gimp -i -b '(elsamuko-photochrom-batch "picture.jpg" (list 255 128 0) (list 255 68 112) 60 60 0 100 FALSE FALSE)' -b '(gimp-quit 0)'
+; or for more than one picture
+; gimp -i -b '(elsamuko-photochrom-batch "*.jpg" (list 255 128 0) (list 255 68 112) 60 60 0 100 FALSE FALSE)' -b '(gimp-quit 0)'
 
 
 (define (elsamuko-photochrom aimg adraw
@@ -227,6 +231,40 @@
     (gimp-image-undo-group-end img)
     (gimp-displays-flush)
     (gimp-context-pop)
+    )
+  )
+
+(define (elsamuko-photochrom-batch pattern
+                                   color1 color2
+                                   contrast bw-merge
+                                   num1 num2
+                                   dodge retro)
+  (gimp-message (string-append "Pattern: " pattern))
+  (let* ((filelist (cadr (file-glob pattern 1))))
+    (while (not (null? filelist))
+           (let* ((filename (car filelist))
+                  (fileparts (strbreakup filename "."))
+                  (img (car (gimp-file-load RUN-NONINTERACTIVE filename filename)))
+                  (adraw (car (gimp-image-get-active-drawable img)))
+                  )
+             (gimp-message (string-append "Filename: " filename))
+
+             (gimp-message "Calling elsamuko-photochrom")
+             (elsamuko-photochrom aimg adraw
+                             color1 color2
+                             contrast bw-merge
+                             num1 num2
+                             dodge retro)
+
+             (gimp-image-merge-visible-layers img EXPAND-AS-NECESSARY)
+             (set! adraw (car (gimp-image-get-active-drawable img)))
+
+             (gimp-message "Saving")
+             (gimp-file-save RUN-NONINTERACTIVE img adraw filename filename)
+             (gimp-image-delete img)
+             (set! filelist (cdr filelist))
+             )
+           )
     )
   )
 
