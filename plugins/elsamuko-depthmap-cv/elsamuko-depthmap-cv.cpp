@@ -471,9 +471,8 @@ calcDepthmap( IplImage* cvImgLeft,
               int change ) {
 
     CvSize size = cvGetSize( cvImgLeft );
-    CvMat* disparityLeft = cvCreateMat( size.height, size.width, CV_8S );
-    CvMat* disparityRight = cvCreateMat( size.height, size.width, CV_8S );
-    CvStereoBMState* state = cvCreateStereoBMState( parallax, iters );
+    CvMat* disparityLeft = cvCreateMat( size.height, size.width, CV_16SC1 );
+    CvStereoBMState* state = cvCreateStereoBMState( CV_STEREO_BM_BASIC, 0 );
 
     if( change ) {
         cvFindStereoCorrespondenceBM( cvImgRight, cvImgLeft, disparityLeft, state );
@@ -482,16 +481,8 @@ calcDepthmap( IplImage* cvImgLeft,
     }
 
     cvReleaseStereoBMState( &state );
-
-    if( side ) {
-        cvConvertScale( disparityRight, cvMatDepth, -8, 0 );
-    } else {
-        cvConvertScale( disparityLeft, cvMatDepth, -8, 0 );
-    }
-
-    cvReleaseMat( &disparityRight );
+    cvConvertScale( disparityLeft, cvMatDepth, -8, 0 );
     cvReleaseMat( &disparityLeft );
-
 }
 
 // debug function to write out the OpenCV matrix as Octave matrix
