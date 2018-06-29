@@ -63,11 +63,11 @@ static inline gint coord( gint i, gint j, gint k, gint channels, gint width ) {
 
 /* local function prototypes */
 static void query( void );
-static void run( const gchar *name,
+static void run( const gchar* name,
                  gint nparams,
-                 const GimpParam  *param,
-                 gint *nreturn_vals,
-                 GimpParam **return_vals );
+                 const GimpParam*  param,
+                 gint* nreturn_vals,
+                 GimpParam** return_vals );
 
 static void calcDepthmap( IplImage* cvImgLeft,
                           IplImage* cvImgRight,
@@ -78,9 +78,9 @@ static void calcDepthmap( IplImage* cvImgLeft,
                           int change );
 
 static gint write_matrix( CvMat* cvMatDepth,
-                          char *filename );
+                          char* filename );
 
-static void depthmap_region( GimpPixelRgn *dstPTR,
+static void depthmap_region( GimpPixelRgn* dstPTR,
                              gint iters,
                              gint parallax,
                              gint side,
@@ -92,14 +92,14 @@ static void depthmap_region( GimpPixelRgn *dstPTR,
                              gint height,
                              gboolean show_progress );
 
-static void depthmap( GimpDrawable *drawable,
+static void depthmap( GimpDrawable* drawable,
                       gint iters,
                       gint parallax,
                       gint side,
                       gint change );
 
-static gboolean depthmap_dialog( GimpDrawable *drawable );
-static void preview_update( GimpPreview *preview );
+static gboolean depthmap_dialog( GimpDrawable* drawable );
+static void preview_update( GimpPreview* preview );
 
 
 /* create a few globals, set default values */
@@ -149,17 +149,17 @@ query( void ) {
 }
 
 static void
-run( const gchar      *name,
+run( const gchar*      name,
      gint              nparams,
-     const GimpParam  *param,
-     gint             *nreturn_vals,
-     GimpParam       **return_vals ) {
+     const GimpParam*  param,
+     gint*             nreturn_vals,
+     GimpParam**       return_vals ) {
     static GimpParam   values[1];
     GimpPDBStatusType  status = GIMP_PDB_SUCCESS;
-    GimpDrawable      *drawable;
+    GimpDrawable*      drawable;
     GimpRunMode        run_mode;
 #ifdef TIMER
-    GTimer            *timer = g_timer_new();
+    GTimer*            timer = g_timer_new();
 #endif
 
     run_mode = ( GimpRunMode )param[0].data.d_int32;
@@ -176,43 +176,45 @@ run( const gchar      *name,
      * Get drawable information...
      */
     drawable = gimp_drawable_get( param[2].data.d_drawable );
-    gimp_tile_cache_ntiles( 2 * MAX( drawable->width  / gimp_tile_width() + 1 ,
+    gimp_tile_cache_ntiles( 2 * MAX( drawable->width  / gimp_tile_width() + 1,
                                      drawable->height / gimp_tile_height() + 1 ) );
 
     switch( run_mode ) {
-    case GIMP_RUN_INTERACTIVE:
-        gimp_get_data( PLUG_IN_PROC, &depthmap_params );
+        case GIMP_RUN_INTERACTIVE:
+            gimp_get_data( PLUG_IN_PROC, &depthmap_params );
 
-        /* initialize pixel regions and buffer */
-        if( ! depthmap_dialog( drawable ) )
-            return;
+            /* initialize pixel regions and buffer */
+            if( ! depthmap_dialog( drawable ) ) {
+                return;
+            }
 
-        break;
+            break;
 
-    case GIMP_RUN_NONINTERACTIVE:
+        case GIMP_RUN_NONINTERACTIVE:
 
-        if( nparams != 7 ) {
-            status = GIMP_PDB_CALLING_ERROR;
-        } else {
-            depthmap_params.iters = param[3].data.d_int32;
-            depthmap_params.parallax = param[4].data.d_int32;
-            depthmap_params.side = param[5].data.d_int32;
-            depthmap_params.change = param[6].data.d_int32;
-
-            /* make sure there are legal values */
-            if( ( depthmap_params.iters < 1 ) ||
-                    ( depthmap_params.parallax < 1 ) )
+            if( nparams != 7 ) {
                 status = GIMP_PDB_CALLING_ERROR;
-        }
+            } else {
+                depthmap_params.iters = param[3].data.d_int32;
+                depthmap_params.parallax = param[4].data.d_int32;
+                depthmap_params.side = param[5].data.d_int32;
+                depthmap_params.change = param[6].data.d_int32;
 
-        break;
+                /* make sure there are legal values */
+                if( ( depthmap_params.iters < 1 ) ||
+                        ( depthmap_params.parallax < 1 ) ) {
+                    status = GIMP_PDB_CALLING_ERROR;
+                }
+            }
 
-    case GIMP_RUN_WITH_LAST_VALS:
-        gimp_get_data( PLUG_IN_PROC, &depthmap_params );
-        break;
+            break;
 
-    default:
-        break;
+        case GIMP_RUN_WITH_LAST_VALS:
+            gimp_get_data( PLUG_IN_PROC, &depthmap_params );
+            break;
+
+        default:
+            break;
     }
 
     if( status == GIMP_PDB_SUCCESS ) {
@@ -243,7 +245,7 @@ run( const gchar      *name,
 }
 
 static void
-depthmap( GimpDrawable *drawable,
+depthmap( GimpDrawable* drawable,
           gint          iters,
           gint          parallax,
           gint          side,
@@ -257,12 +259,12 @@ depthmap( GimpDrawable *drawable,
     image = gimp_drawable_get_image( drawable->drawable_id );
     printf( "L%i: Render: Image ID: %i\n", __LINE__, image );
 
-    gint *layers = gimp_image_get_layers( image, &num_of_layers );
+    gint* layers = gimp_image_get_layers( image, &num_of_layers );
     gint leftlayer = layers[0];
     gint rightlayer = layers[1];
 
     gint32 depthmap = gimp_layer_copy( drawable->drawable_id );
-    GimpDrawable *depthdrawable = gimp_drawable_get( depthmap );
+    GimpDrawable* depthdrawable = gimp_drawable_get( depthmap );
 
     /* initialize pixel regions */
     gimp_pixel_rgn_init( &destPR, depthdrawable, 0, 0, depthdrawable->width, depthdrawable->height, TRUE, TRUE );
@@ -290,7 +292,7 @@ depthmap( GimpDrawable *drawable,
  * 3D reconstruction and copy the disparity as depthmap back to GIMP.
  */
 static void
-depthmap_region( GimpPixelRgn *prDepth,
+depthmap_region( GimpPixelRgn* prDepth,
                  gint          iters,
                  gint          parallax,
                  gint          side,
@@ -308,15 +310,15 @@ depthmap_region( GimpPixelRgn *prDepth,
     gint        value;
 
     //define layers
-    gint *layers = gimp_image_get_layers( image, &num_of_layers );
+    gint* layers = gimp_image_get_layers( image, &num_of_layers );
     gint leftlayer = layers[0];
     gint rightlayer = layers[1];
     gimp_layer_add_alpha( leftlayer );
     gimp_layer_add_alpha( rightlayer );
 
     //define drawables
-    GimpDrawable *leftdrawable = gimp_drawable_get( leftlayer );
-    GimpDrawable *rightdrawable = gimp_drawable_get( rightlayer );
+    GimpDrawable* leftdrawable = gimp_drawable_get( leftlayer );
+    GimpDrawable* rightdrawable = gimp_drawable_get( rightlayer );
     const gint channels = gimp_drawable_bpp( leftdrawable->drawable_id );
 
     printf( "L%i: Image ID: %i\n",           __LINE__, image );
@@ -344,9 +346,9 @@ depthmap_region( GimpPixelRgn *prDepth,
     printf( "L%i: Pixel regions initiated\n", __LINE__ );
 
     //Initialise memory
-    guchar *rectLeft = g_new( guchar, channels * width * height );
-    guchar *rectRight = g_new( guchar, channels * width * height );
-    guchar *rectDepth = g_new( guchar, channels * width * height );
+    guchar* rectLeft = g_new( guchar, channels * width * height );
+    guchar* rectRight = g_new( guchar, channels * width * height );
+    guchar* rectDepth = g_new( guchar, channels * width * height );
 
     //Save stereo images in arrays
     gimp_pixel_rgn_get_rect( &prLeft,
@@ -363,10 +365,13 @@ depthmap_region( GimpPixelRgn *prDepth,
     IplImage* cvImgRight = cvCreateImage( cvSize( width, height ), IPL_DEPTH_8U, 1 );
     CvMat* cvMatDepth = cvCreateMat( height, width, CV_8U );
 
-    if( show_progress )
+    if( show_progress ) {
         gimp_progress_init( _( "Calculating..." ) );
+    }
 
-    if( show_progress ) gimp_progress_update( 0.1 );
+    if( show_progress ) {
+        gimp_progress_update( 0.1 );
+    }
 
     // B/W
     if( channels == 2 ) {
@@ -374,8 +379,8 @@ depthmap_region( GimpPixelRgn *prDepth,
 
         for( i = 0; i < height; i++ ) { //rows
             for( j = 0; j < width; j++ ) { //columns
-                ( ( uchar * )( cvImgLeft->imageData + i * cvImgLeft->widthStep ) )[j] = ( gint )rectLeft[coord( i, j, 0, channels, width )];
-                ( ( uchar * )( cvImgRight->imageData + i * cvImgRight->widthStep ) )[j] = ( gint )rectRight[coord( i, j, 0, channels, width )];
+                ( ( uchar* )( cvImgLeft->imageData + i * cvImgLeft->widthStep ) )[j] = ( gint )rectLeft[coord( i, j, 0, channels, width )];
+                ( ( uchar* )( cvImgRight->imageData + i * cvImgRight->widthStep ) )[j] = ( gint )rectRight[coord( i, j, 0, channels, width )];
             }
         }
 
@@ -386,23 +391,27 @@ depthmap_region( GimpPixelRgn *prDepth,
         for( i = 0; i < height; i++ ) { //rows
             for( j = 0; j < width; j++ ) { //columns
                 //Luminance: 0.2126R + 0.7152G + 0.0722B
-                ( ( uchar * )( cvImgLeft->imageData + i * cvImgLeft->widthStep ) )[j] = 0.2126 * ( gint )rectLeft[coord( i, j, 0, channels, width )] +
+                ( ( uchar* )( cvImgLeft->imageData + i * cvImgLeft->widthStep ) )[j] = 0.2126 * ( gint )rectLeft[coord( i, j, 0, channels, width )] +
                         0.7152 * ( gint )rectLeft[coord( i, j, 1, channels, width )] +
                         0.0722 * ( gint )rectLeft[coord( i, j, 2, channels, width )];
-                ( ( uchar * )( cvImgRight->imageData + i * cvImgRight->widthStep ) )[j] = 0.2126 * ( gint )rectRight[coord( i, j, 0, channels, width )] +
+                ( ( uchar* )( cvImgRight->imageData + i * cvImgRight->widthStep ) )[j] = 0.2126 * ( gint )rectRight[coord( i, j, 0, channels, width )] +
                         0.7152 * ( gint )rectRight[coord( i, j, 1, channels, width )] +
                         0.0722 * ( gint )rectRight[coord( i, j, 2, channels, width )];
             }
         }
     }
 
-    if( show_progress ) gimp_progress_update( 0.2 );
+    if( show_progress ) {
+        gimp_progress_update( 0.2 );
+    }
 
     // http://opencv.willowgarage.com/documentation/c/camera_calibration_and_3d_reconstruction.html#findstereocorrespondencegc
     calcDepthmap( cvImgLeft, cvImgRight, cvMatDepth,
                   iters, parallax, side, change );
 
-    if( show_progress ) gimp_progress_update( 0.8 );
+    if( show_progress ) {
+        gimp_progress_update( 0.8 );
+    }
 
     //     // write out the OpenCV matrix as Octave matrix
     //     char* home = getenv("HOME");
@@ -445,7 +454,9 @@ depthmap_region( GimpPixelRgn *prDepth,
                              x, y,
                              width, height );
 
-    if( show_progress ) gimp_progress_update( 1.0 );
+    if( show_progress ) {
+        gimp_progress_update( 1.0 );
+    }
 
     //free memory
     g_free( rectLeft );
@@ -488,9 +499,9 @@ calcDepthmap( IplImage* cvImgLeft,
 // debug function to write out the OpenCV matrix as Octave matrix
 static gint
 write_matrix( CvMat*  cvMatDepth,
-              char   *filename ) {
+              char*   filename ) {
     gint i, j, k, height, width;
-    FILE *file;
+    FILE* file;
     gint error = FALSE;
     height = cvMatDepth->rows;
     width  = cvMatDepth->cols;
@@ -525,17 +536,17 @@ write_matrix( CvMat*  cvMatDepth,
 };
 
 static gboolean
-depthmap_dialog( GimpDrawable *drawable ) {
-    GtkWidget *dialog;
-    GtkWidget *main_vbox;
-    GtkWidget *preview;
-    GtkWidget *table;
-    GtkObject *adj;
-    GtkWidget *frame;
-    GtkWidget *frame2;
-    GtkWidget *hbox;
-    GtkWidget *button;
-    GtkWidget *button2;
+depthmap_dialog( GimpDrawable* drawable ) {
+    GtkWidget* dialog;
+    GtkWidget* main_vbox;
+    GtkWidget* preview;
+    GtkWidget* table;
+    GtkObject* adj;
+    GtkWidget* frame;
+    GtkWidget* frame2;
+    GtkWidget* hbox;
+    GtkWidget* button;
+    GtkWidget* button2;
     gboolean   run;
 
     gimp_ui_init( PLUG_IN_BINARY, TRUE );
@@ -643,8 +654,8 @@ depthmap_dialog( GimpDrawable *drawable ) {
 }
 
 static void
-preview_update( GimpPreview *preview ) {
-    GimpDrawable *drawable;
+preview_update( GimpPreview* preview ) {
+    GimpDrawable* drawable;
     gint32        image;
     GimpPixelRgn  destPR;
     gint          x, y;
