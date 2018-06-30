@@ -417,15 +417,6 @@ depthmap_region( GimpPixelRgn* prDepth,
         gimp_progress_update( 0.8 );
     }
 
-    //     // write out the OpenCV matrix as Octave matrix
-    //     char* home = getenv("HOME");
-    //     char dir[PATH_MAX + 1];
-    //     char file[PATH_MAX + 1];
-    //     sprintf (dir, "%s/%s", home, "depthmap");
-    //     sprintf (file, "%s/%s/%s", home, "depthmap", "depthmap");
-    //     mkdir( dir, S_IRWXU );
-    //     write_matrix(cvMatDepth, file);
-
     // B/W
     if( channels == 2 ) {
         printf( "L%i: B/W: Set depth values\n", __LINE__ );
