@@ -220,6 +220,8 @@ run( const gchar*      name,
     if( status == GIMP_PDB_SUCCESS ) {
         drawable = gimp_drawable_get( param[2].data.d_drawable );
 
+        gimp_image_undo_group_start( param[1].data.d_image );
+
         /* here we go */
         depthmap( drawable,
                   depthmap_params.iters,
@@ -236,6 +238,8 @@ run( const gchar*      name,
 
         gimp_drawable_detach( drawable );
         values[0].data.d_status = status;
+
+        gimp_image_undo_group_end( param[1].data.d_image );
     }
 
 #ifdef TIMER
