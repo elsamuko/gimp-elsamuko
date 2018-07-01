@@ -1,0 +1,16 @@
+*
+
+!.gitignore
+
+!*/
+
+!*.md
+
+!*.scm
+
+!*.pro
+
+!*.h
+!*.c
+!*.cpp
+!*.hpp
