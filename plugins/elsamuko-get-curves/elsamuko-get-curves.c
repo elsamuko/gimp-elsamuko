@@ -304,7 +304,7 @@ static void getcurves( GimpDrawable *drawable ) {
 
     time_t rawtime;
     time( &rawtime );
-    strftime( filename, 100, "curve_%Y-%m-%d_%H:%M:%S", localtime( &rawtime ) );
+    strftime( filename, 100, "curve_%Y-%m-%d_%H-%M-%S", localtime( &rawtime ) );
     sprintf( pathname, "%s/curves/%s", gimp_directory(), filename );
     printf( "L%i: Filename:%s\n", __LINE__ , pathname );
 
