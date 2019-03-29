@@ -43,7 +43,28 @@
 ;
 ; Updated by elsamuko <elsamuko@web.de>
 ; http://registry.gimp.org/node/7870
-
+;
+; The batch call is included, run it with
+; gimp -i -b '(elsamuko-lomo-batch "picture.jpg" 1.5 10 10 0.8 5 1 3 128 COLOR FALSE FALSE TRUE FALSE 0 0 115)' -b '(gimp-quit 0)'
+; or for more than one picture
+; gimp -i -b '(elsamuko-lomo-batch "*.jpg" 1.5 10 10 0.8 5 1 3 128 COLOR FALSE FALSE TRUE FALSE 0 0 115)' -b '(gimp-quit 0)'
+;
+; set as COLOR:
+; 0 - neutral
+; 1 - old red
+; 2 - xpro green
+; 3 - blue
+; 4 - intense red
+; 5 - movie
+; 6 - vintage-look
+; 7 - LAB
+; 8 - light blue
+; 9 - pink shadow
+; 10 - redscale
+; 11 - retro bw
+; 12 - paynes
+; 13 - sepia
+;
 
 (define (elsamuko-lomo aimg adraw avig asat acon
                        sharp wide_angle gauss_blur
@@ -299,7 +320,7 @@
                   (gimp-curves-spline draw  HISTOGRAM-GREEN 4 #(30 0 255 255))
                   )
        )
-
+    
     ;redscale
     (if(= c41 10)(begin
                    ;Blue Layer
@@ -503,6 +524,42 @@
     (gimp-image-undo-group-end img)
     (gimp-displays-flush)
     (gimp-context-pop)
+    )
+  )
+  
+(define (elsamuko-lomo-batch pattern avig asat acon
+                             sharp wide_angle gauss_blur
+                             motion_blur grain c41 
+                             invertA invertB
+                             adv is_black
+                             centerx centery aradius)
+  (gimp-message (string-append "Pattern: " pattern))
+  (let* ((filelist (cadr (file-glob pattern 1))))
+    (while (not (null? filelist))
+           (let* ((filename (car filelist))
+                  (fileparts (strbreakup filename "."))
+                  (img (car (gimp-file-load RUN-NONINTERACTIVE filename filename)))
+                  (adraw (car (gimp-image-get-active-drawable img)))
+                  )
+             (gimp-message (string-append "Filename: " filename))
+
+             (gimp-message "Calling elsamuko-lomo")
+             (elsamuko-lomo img adraw avig asat acon
+                             sharp wide_angle gauss_blur
+                             motion_blur grain c41 
+                             invertA invertB
+                             adv is_black
+                             centerx centery aradius)
+
+             (gimp-image-merge-visible-layers img EXPAND-AS-NECESSARY)
+             (set! adraw (car (gimp-image-get-active-drawable img)))
+
+             (gimp-message "Saving")
+             (gimp-file-save RUN-NONINTERACTIVE img adraw filename filename)
+             (gimp-image-delete img)
+             (set! filelist (cdr filelist))
+             )
+           )
     )
   )
 
