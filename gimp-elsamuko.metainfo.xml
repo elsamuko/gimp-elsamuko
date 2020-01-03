@@ -2,9 +2,9 @@
 <component type="addon">
 	<id>gimp-elsamuko</id>
 	<extends>gimp.desktop</extends>
-	<name>gimp-elsamuko</name>
+	<name>Elsamuko</name>
 	<summary>Collection of GIMP scripts</summary>
-	<url type="homepage">https://sites.google.com/site/elsamuko/gimp</url>
+	<url type="homepage">https://github.com/elsamuko</url>
 	<url type="bugtracker">https://github.com/elsamuko/gimp-elsamuko/issues</url>
 	<metadata_license>CC0-1.0</metadata_license>
 	<project_license>GPL-3.0+</project_license>
