@@ -1,5 +1,17 @@
 # Scripts
 
+## Install
+To get all scripts, download [elsamuko.zip](https://github.com/elsamuko/gimp-elsamuko/archive/master.zip) to your computer and unzip the scripts into the [scripts folder](https://docs.gimp.org/2.10/en/install-script-fu.html) of GIMP.
+
+Distro | Command
+:-------------------------|:-------------------------
+Ubuntu/Debian | `sudo apt install gimp-plugin-registry`
+Fedora | `sudo yum install gimp-elsamuko`
+Arch | `sudo pacman -S gimp-elsamuko-scripts`
+
+If you like these scripts, hug someone or leave a message in the [guestbook](http://users4.smartgb.com/g/g.php?a=s&i=g44-47931-51).
+
+## Screenshots
 Filter | Landscape | Cat
 :-------------------------:|:-------------------------:|:-------------------------:
 Original | <img src="samples/landscape-orig.jpg" width="300"> | <img src="samples/cat-orig.jpg" width="300">
