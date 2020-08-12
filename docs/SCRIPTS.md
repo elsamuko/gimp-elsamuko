@@ -4,7 +4,7 @@
 To get all scripts, download [elsamuko.zip](https://github.com/elsamuko/gimp-elsamuko/archive/master.zip) to your computer and unzip the scripts into the [scripts folder](https://docs.gimp.org/2.10/en/install-script-fu.html) of GIMP.
 
 Distro | Command
-:-------------------------|:-------------------------
+------------ | -------------
 Ubuntu/Debian | `sudo apt install gimp-plugin-registry`
 Fedora | `sudo yum install gimp-elsamuko`
 Arch | `sudo pacman -S gimp-elsamuko-scripts`
@@ -13,7 +13,7 @@ If you like these scripts, hug someone or leave a message in the [guestbook](htt
 
 ## Screenshots
 Filter | Landscape | Cat
-:-------------------------:|:-------------------------:|:-------------------------:
+------------ | ------------- | -------------
 Original | <img src="samples/landscape-orig.jpg" width="300"> | <img src="samples/cat-orig.jpg" width="300">
 Lomo | <img src="samples/landscape-lomo-green.jpg" width="300"> | <img src="samples/cat-lomo.jpg" width="300">
 Sprocket Hole | <img src="samples/landscape-sprockethole.jpg" width="300"> | <img src="samples/cat-sprockethole.jpg" width="300">
