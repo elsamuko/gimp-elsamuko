@@ -12,6 +12,7 @@ Arch | `sudo pacman -S gimp-elsamuko-scripts`
 If you like these scripts, hug someone or leave a message in the [guestbook](http://users4.smartgb.com/g/g.php?a=s&i=g44-47931-51).
 
 ## Screenshots
+
 Filter | Landscape | Cat
 ------------ | ------------- | -------------
 Original | <img src="samples/landscape-orig.jpg" width="300"> | <img src="samples/cat-orig.jpg" width="300">
