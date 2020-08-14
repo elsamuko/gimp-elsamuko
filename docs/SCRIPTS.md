@@ -20,7 +20,7 @@ Lomo | <img src="samples/landscape-lomo-green.jpg" width="300"> | <img src="samp
 Sprocket Hole | <img src="samples/landscape-sprockethole.jpg" width="300"> | <img src="samples/cat-sprockethole.jpg" width="300">
 Technicolor 2 | <img src="samples/landscape-technicolor-2.jpg" width="300"> | <img src="samples/cat-technicolor2.jpg" width="300">
 Technicolor 3 | <img src="samples/landscape-technicolor-3.jpg" width="300"> | <img src="samples/cat-technicolor3.jpg" width="300">
-Antique Photo Border | <img src="samples/landscape-antique-border.jpg" width="300"> | <img src="samples/cat-antique-border.jpg" width="300">
+[Antique Photo Border](scripts/antique-border) | <img src="samples/landscape-antique-border.jpg" width="300"> | <img src="samples/cat-antique-border.jpg" width="300">
 First Photo Border | <img src="samples/landscape-cut-off.jpg" width="300"> | <img src="samples/cat-cut-off.jpg" width="300">
 National Geographic | <img src="samples/landscape-ng.jpg" width="300"> | <img src="samples/cat-ng.jpg" width="300">
 Split Tone with Edge Detection | <img src="samples/landscape-split-tone-ED.jpg" width="300"> | <img src="samples/cat-split-tone-ED.jpg" width="300">
