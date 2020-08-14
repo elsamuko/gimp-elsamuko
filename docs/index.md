@@ -1,3 +1,3 @@
 # GIMP Scripts and Plugins
 
-* [Scripts](SCRIPTS.md)
+* [Scripts](scripts.md)
