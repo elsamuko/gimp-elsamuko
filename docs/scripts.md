@@ -26,7 +26,7 @@ National Geographic | <img src="samples/landscape-ng.jpg" width="300"> | <img sr
 Split Tone with Edge Detection | <img src="samples/landscape-split-tone-ED.jpg" width="300"> | <img src="samples/cat-split-tone-ED.jpg" width="300">
 Film Grain | <img src="samples/landscape-grain.jpg" width="300"> | <img src="samples/cat-grain.jpg" width="300">
 Obama "Hope" | <img src="samples/landscape-fairey.jpg" width="300"> | <img src="samples/cat-fairey.jpg" width="300">
-Che Guevara | <img src="samples/landscape-fitzpatrick.jpg" width="300"> | <img src="samples/cat-fitzpatrick.jpg" width="300">
+[Che Guevara](scripts/che-guevara) | <img src="samples/landscape-fitzpatrick.jpg" width="300"> | <img src="samples/cat-fitzpatrick.jpg" width="300">
 Vintage Look | <img src="samples/landscape-vintage.jpg" width="300"> | <img src="samples/cat-vintage.jpg" width="300">
 White Balance Puzzle | <img src="samples/landscape-auto-wb.jpg" width="300"> | <img src="samples/cat-auto-wb.jpg" width="300">
 GIMP Octave | <img src="samples/landscape-octave.jpg" width="300"> | <img src="samples/cat-octave.jpg" width="300">
@@ -35,7 +35,7 @@ Movie 300 | <img src="samples/landscape-300.jpg" width="300"> | <img src="sample
 Rainy Landscape | <img src="samples/landscape-rainy.jpg" width="300"> | <img src="samples/cat-rainy.jpg" width="300">
 Cyanotype | <img src="samples/landscape-cyano.jpg" width="300"> | <img src="samples/cat-cyano.jpg" width="300">
 Sunny Landscape | <img src="samples/landscape-sunny.jpg" width="300"> | <img src="samples/cat-sunny.jpg" width="300">
-Color Tint | <img src="samples/landscape-color-tint.jpg" width="300"> | <img src="samples/cat-color-tint.jpg" width="300">
+[Color Tint](scripts/color-tint) | <img src="samples/landscape-color-tint.jpg" width="300"> | <img src="samples/cat-color-tint.jpg" width="300">
 Glass Displacement | <img src="samples/landscape-glass.jpg" width="300"> | <img src="samples/cat-glass.jpg" width="300">
 YUV Temperature | <img src="samples/landscape-temperature.jpg" width="300"> | <img src="samples/cat-temperature.jpg" width="300">
 Erosion Sharpen | <img src="samples/landscape-erosion.jpg" width="300"> | <img src="samples/cat-erosion.jpg" width="300">
