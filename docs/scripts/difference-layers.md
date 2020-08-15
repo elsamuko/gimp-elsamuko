@@ -12,8 +12,8 @@ Also you can change the modification intensity by changing the intensity of thes
 
 Copy it into the [scripts folder](https://docs.gimp.org/2.10/en/install-script-fu.html) from GIMP, you will find it then under **Layer → Difference Layers**.
 
-Example image:
-![](difference-layers.png)
+Example image:  
+<img src="difference-layers.png" width="450">
 
     Difference Layers
     Left: B A

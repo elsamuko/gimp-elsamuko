@@ -6,4 +6,4 @@ Copy it into the [scripts folder](https://docs.gimp.org/2.10/en/install-script-f
 
 If you like it, hug someone.
 
-![cc-by-sa http://picasaweb.google.com/lh/photo/U4BRF5eub1-V2vbS_xXVEw](cyanotype.jpg)
+<img alt="cc-by-sa http://picasaweb.google.com/lh/photo/U4BRF5eub1-V2vbS_xXVEw" src="cyanotype.jpg" width="450">

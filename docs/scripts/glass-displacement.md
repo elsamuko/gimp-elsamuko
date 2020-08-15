@@ -6,10 +6,10 @@ Copy it into your [scripts folder](https://docs.gimp.org/2.10/en/install-script-
 If you like it, hug someone.
 
 First layer:  
-![](glass-displacement_1.jpg)
+<img src="glass-displacement_1.jpg" width="300">
 
 Second layer:  
-![Glasses (cc) by Tim Parkinson](glass-displacement_2.jpg)
+<img src="glass-displacement_2.jpg" alt="Glasses (cc) by Tim Parkinson" width="300">
 
 Final gravure:  
-![](glass-displacement_3.jpg)
+<img src="glass-displacement_3.jpg" width="300">

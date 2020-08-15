@@ -5,4 +5,4 @@ Copy it into the [scripts folder](https://docs.gimp.org/2.10/en/install-script-f
 The 'Shift' option moves the cut-off-circle about a percentage of width. 'Radius' changes the size of this circle in multiples of height and 'Border Distance' the distance of the border in percentage of height. Just try some values and see the result.
 
 An example can be seen here:  
-![Harbor - Aged Version](photo-border.jpg)
+<img src="photo-border.jpg" alt="Harbor - Aged Version" width="450">

@@ -1,12 +1,14 @@
-#  Lomo Script with Old Style Colors 
+# Lomo Script with Old Style Colors 
 
 This script simulates the [Lomo](https://www.lomography.com/) effect. Copy it into the [scripts folder](https://docs.gimp.org/2.10/en/install-script-fu.html) from GIMP, you will find it then under **Filters → Light and Shadow → Lomo**.  
 The original from Francois Le Lay can be downloaded [here](https://inphotos.org/2007/10/23/gimp-lomo-plugin/). The idea of C41 colors comes from [here](http://registry.gimp.org/node/4683). I added sharpness, repaired the double vignetting problem and added some nice colors, especially the beautiful green sky effect from Lomo pictures. Examples can be found [here](https://www.flickr.com/photos/28653536@N07/sets/72157606348593453/).  
 Attention, results may make happy.
 
-![](lomo1.jpg)
-![](lomo2.jpg)
-![](lomo3.jpg)
+<img src="lomo1.jpg" width="450">\
+
+<img src="lomo2.jpg" width="450">\
+
+<img src="lomo3.jpg" width="450">\
 
 Updates:
 * I [refreshed](blog.epicedits.com/2008/02/15/photoshop-techniques-cross-process-and-redscale/) the colors and added another vignette, but this is black and can be moved and resized.
