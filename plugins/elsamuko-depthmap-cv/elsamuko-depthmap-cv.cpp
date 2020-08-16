@@ -20,6 +20,7 @@
 #include <cstdlib>
 #include <cstdio>
 #include <opencv2/opencv.hpp>
+#include <opencv2/core/mat.hpp>
 #include <opencv2/stereo.hpp>
 
 // #include <sys/types.h>
@@ -69,16 +70,13 @@ static void run( const gchar* name,
                  gint* nreturn_vals,
                  GimpParam** return_vals );
 
-static void calcDepthmap( IplImage* cvImgLeft,
-                          IplImage* cvImgRight,
-                          CvMat* cvDepth,
+static void calcDepthmap( const cv::Mat& cvImgLeft,
+                          const cv::Mat& cvImgRight,
+                          cv::Mat& cvDepth,
                           int iters,
                           int parallax,
                           int side,
                           int change );
-
-static gint write_matrix( CvMat* cvMatDepth,
-                          char* filename );
 
 static void depthmap_region( GimpPixelRgn* dstPTR,
                              gint iters,
@@ -365,9 +363,10 @@ depthmap_region( GimpPixelRgn* prDepth,
                              width, height );
 
     //cvimages
-    IplImage* cvImgLeft  = cvCreateImage( cvSize( width, height ), IPL_DEPTH_8U, 1 );
-    IplImage* cvImgRight = cvCreateImage( cvSize( width, height ), IPL_DEPTH_8U, 1 );
-    CvMat* cvMatDepth = cvCreateMat( height, width, CV_8U );
+    cv::Size size( width, height );
+    cv::Mat cvImgLeft( size, CV_8UC1 );
+    cv::Mat cvImgRight( size, CV_8UC1 );
+    cv::Mat cvMatDepth( size, CV_8UC1 );
 
     if( show_progress ) {
         gimp_progress_init( _( "Calculating..." ) );
@@ -383,8 +382,8 @@ depthmap_region( GimpPixelRgn* prDepth,
 
         for( i = 0; i < height; i++ ) { //rows
             for( j = 0; j < width; j++ ) { //columns
-                ( ( uchar* )( cvImgLeft->imageData + i * cvImgLeft->widthStep ) )[j] = ( gint )rectLeft[coord( i, j, 0, channels, width )];
-                ( ( uchar* )( cvImgRight->imageData + i * cvImgRight->widthStep ) )[j] = ( gint )rectRight[coord( i, j, 0, channels, width )];
+                cvImgLeft.ptr( i )[j] = ( gint )rectLeft[coord( i, j, 0, channels, width )];
+                cvImgRight.ptr( i )[j] = ( gint )rectRight[coord( i, j, 0, channels, width )];
             }
         }
 
@@ -395,12 +394,12 @@ depthmap_region( GimpPixelRgn* prDepth,
         for( i = 0; i < height; i++ ) { //rows
             for( j = 0; j < width; j++ ) { //columns
                 //Luminance: 0.2126R + 0.7152G + 0.0722B
-                ( ( uchar* )( cvImgLeft->imageData + i * cvImgLeft->widthStep ) )[j] = 0.2126 * ( gint )rectLeft[coord( i, j, 0, channels, width )] +
-                        0.7152 * ( gint )rectLeft[coord( i, j, 1, channels, width )] +
-                        0.0722 * ( gint )rectLeft[coord( i, j, 2, channels, width )];
-                ( ( uchar* )( cvImgRight->imageData + i * cvImgRight->widthStep ) )[j] = 0.2126 * ( gint )rectRight[coord( i, j, 0, channels, width )] +
-                        0.7152 * ( gint )rectRight[coord( i, j, 1, channels, width )] +
-                        0.0722 * ( gint )rectRight[coord( i, j, 2, channels, width )];
+                cvImgLeft.ptr( i )[j] = 0.2126 * ( gint )rectLeft[coord( i, j, 0, channels, width )] +
+                                        0.7152 * ( gint )rectLeft[coord( i, j, 1, channels, width )] +
+                                        0.0722 * ( gint )rectLeft[coord( i, j, 2, channels, width )];
+                cvImgRight.ptr( i )[j] = 0.2126 * ( gint )rectRight[coord( i, j, 0, channels, width )] +
+                                         0.7152 * ( gint )rectRight[coord( i, j, 1, channels, width )] +
+                                         0.0722 * ( gint )rectRight[coord( i, j, 2, channels, width )];
             }
         }
     }
@@ -423,7 +422,7 @@ depthmap_region( GimpPixelRgn* prDepth,
 
         for( i = 0; i < height; i++ ) { //rows
             for( j = 0; j < width; j++ ) { //columns
-                rectDepth[coord( i, j, 0, channels, width )] = ( ( uchar* )( cvMatDepth->data.ptr + cvMatDepth->step * i ) )[j];
+                rectDepth[coord( i, j, 0, channels, width )] = cvMatDepth.ptr( i )[j];
                 rectDepth[coord( i, j, 1, channels, width )] = 255;
             }
         }
@@ -434,7 +433,7 @@ depthmap_region( GimpPixelRgn* prDepth,
 
         for( i = 0; i < height; i++ ) { //rows
             for( j = 0; j < width; j++ ) { //columns
-                value = ( ( uchar* )( cvMatDepth->data.ptr + cvMatDepth->step * i ) )[j];
+                value = cvMatDepth.ptr( i )[j];
                 rectDepth[coord( i, j, 0, channels, width )] = value;
                 rectDepth[coord( i, j, 1, channels, width )] = value;
                 rectDepth[coord( i, j, 2, channels, width )] = value;
@@ -458,78 +457,34 @@ depthmap_region( GimpPixelRgn* prDepth,
     g_free( rectRight );
     g_free( rectDepth );
 
-    //cvimages
-    cvReleaseImage( &cvImgLeft );
-    cvReleaseImage( &cvImgRight );
-    cvReleaseMat( &cvMatDepth );
-
     printf( "L%i: **** End of depthmap ****\n\n\n", __LINE__ );
 }
 
-//http://opencv.willowgarage.com/documentation/c/camera_calibration_and_3d_reconstruction.html#findstereocorrespondencegc
+// https://docs.opencv.org/master/d1/d9f/classcv_1_1stereo_1_1StereoBinarySGBM.html
 static void
-calcDepthmap( IplImage* cvImgLeft,
-              IplImage* cvImgRight,
-              CvMat* cvMatDepth,
+calcDepthmap( const cv::Mat& cvImgLeft,
+              const cv::Mat& cvImgRight,
+              cv::Mat& cvMatDepth,
               int iters,
               int parallax,
               int side,
               int change ) {
 
-    CvSize size = cvGetSize( cvImgLeft );
-    CvMat* disparity = cvCreateMat( size.height, size.width, CV_16SC1 );
-
-    CvStereoBMState* state = cvCreateStereoBMState( CV_STEREO_BM_BASIC, 16 );
+    auto matcher = cv::stereo::StereoBinarySGBM::create( 0, 16, 9 );
 
     if( change ) {
-        cvFindStereoCorrespondenceBM( cvImgRight, cvImgLeft, disparity, state );
+        matcher->compute( cvImgRight, cvImgLeft, cvMatDepth );
     } else {
-        cvFindStereoCorrespondenceBM( cvImgLeft, cvImgRight, disparity, state );
+        matcher->compute( cvImgLeft, cvImgRight, cvMatDepth );
     }
 
-    cvReleaseStereoBMState( &state );
-    cvConvertScale( disparity, cvMatDepth );
-    cvReleaseMat( &disparity );
+    cv::convertScaleAbs( cvMatDepth, cvMatDepth );
+
+    // printf( "L%i: Writing depth.png\n", __LINE__ );
+    // imwrite( "depthmap_left.png", cvImgLeft );
+    // imwrite( "depthmap_right.png", cvImgRight );
+    // imwrite( "depthmap_depth.png", cvMatDepth );
 }
-
-// debug function to write out the OpenCV matrix as Octave matrix
-static gint
-write_matrix( CvMat*  cvMatDepth,
-              char*   filename ) {
-    gint i, j, k, height, width;
-    FILE* file;
-    gint error = FALSE;
-    height = cvMatDepth->rows;
-    width  = cvMatDepth->cols;
-
-    file = fopen( filename, "w" );
-
-    if( file != NULL ) {
-        // # Created by elsamuko-depthmap
-        // # name: depthmap
-        // # type: matrix
-        // # ndims: 3
-        fputs( "# Created by elsamuko-depthmap\n", file );
-        fputs( "# name:  depthmap\n", file );
-        fputs( "# type:  matrix\n", file );
-        fprintf( file, "# ndims: %i\n", 3 );
-        fprintf( file, "%i %i %i\n", height, width, 1 );
-
-        for( j = 0; j < width; j++ ) {
-            for( i = 0; i < height; i++ ) {
-                fprintf( file, "%i\n", ( int )( ( uchar* )( cvMatDepth->data.ptr + cvMatDepth->step * i ) )[j] );
-            }
-        }
-
-        fclose( file );
-    } else {
-        gimp_message( "Error: Could not open input matrix." );
-        printf( "L%i: Error: Could not open input matrix.\n", __LINE__ );
-        error = TRUE;
-    }
-
-    return error; //zero, if there is no problem
-};
 
 static gboolean
 depthmap_dialog( GimpDrawable* drawable ) {
