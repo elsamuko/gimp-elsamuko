@@ -29,7 +29,6 @@ Original | <img src="samples/landscape-orig.jpg" width="300"> | <img src="sample
 [Che Guevara](scripts/che-guevara) | <img src="samples/landscape-fitzpatrick.jpg" width="300"> | <img src="samples/cat-fitzpatrick.jpg" width="300">
 [Vintage Look](scripts/vintage) | <img src="samples/landscape-vintage.jpg" width="300"> | <img src="samples/cat-vintage.jpg" width="300">
 [White Balance Puzzle](scripts/white-balance) | <img src="samples/landscape-auto-wb.jpg" width="300"> | <img src="samples/cat-auto-wb.jpg" width="300">
-GIMP Octave | <img src="samples/landscape-octave.jpg" width="300"> | <img src="samples/cat-octave.jpg" width="300">
 [Photochrom](scripts/photochrom) | <img src="samples/landscape-photochrom.jpg" width="300"> | <img src="samples/cat-photochrom.jpg" width="300">
 [Movie 300](scripts/movie-300) | <img src="samples/landscape-300.jpg" width="300"> | <img src="samples/cat-300.jpg" width="300">
 [Rainy Landscape](scripts/rainy) | <img src="samples/landscape-rainy.jpg" width="300"> | <img src="samples/cat-rainy.jpg" width="300">
@@ -37,5 +36,4 @@ GIMP Octave | <img src="samples/landscape-octave.jpg" width="300"> | <img src="s
 [Sunny Landscape](scripts/sunny) | <img src="samples/landscape-sunny.jpg" width="300"> | <img src="samples/cat-sunny.jpg" width="300">
 [Color Tint](scripts/color-tint) | <img src="samples/landscape-color-tint.jpg" width="300"> | <img src="samples/cat-color-tint.jpg" width="300">
 [Glass Displacement](scripts/glass-displacement) | <img src="samples/landscape-glass.jpg" width="300"> | <img src="samples/cat-glass.jpg" width="300">
-YUV Temperature | <img src="samples/landscape-temperature.jpg" width="300"> | <img src="samples/cat-temperature.jpg" width="300">
 [Erosion Sharpen](scripts/erosion-sharpen) | <img src="samples/landscape-erosion.jpg" width="300"> | <img src="samples/cat-erosion.jpg" width="300">
