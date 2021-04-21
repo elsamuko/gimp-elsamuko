@@ -5,7 +5,7 @@
 Put the *.scm files in the GIMP scripts folder (~/.config/GIMP/2.10/scripts/) and refresh scripts (<Image>/Filters/Script-Fu/Refresh Scripts) or restart GIMP.
 
 You can view an overview of the scripts here:
-https://sites.google.com/site/elsamuko/gimp
+https://elsamuko.github.io/gimp-elsamuko/scripts.html
 
 You will find the scripts then at these places in the GIMP image menu:
 
