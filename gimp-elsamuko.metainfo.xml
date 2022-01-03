@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <component type="addon">
 	<id>gimp-elsamuko</id>
-	<extends>gimp.desktop</extends>
+	<extends>org.gimp.GIMP</extends>
 	<name>Elsamuko</name>
 	<summary>Collection of GIMP scripts</summary>
 	<url type="homepage">https://github.com/elsamuko</url>
