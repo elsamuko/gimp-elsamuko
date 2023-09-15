@@ -21,7 +21,7 @@ Original | <img src="samples/landscape-orig.jpg" width="300"> | <img src="sample
 [Technicolor 2](scripts/technicolor-2) | <img src="samples/landscape-technicolor-2.jpg" width="300"> | <img src="samples/cat-technicolor2.jpg" width="300">
 [Technicolor 3](scripts/technicolor-2) | <img src="samples/landscape-technicolor-3.jpg" width="300"> | <img src="samples/cat-technicolor3.jpg" width="300">
 [Antique Photo Border](scripts/antique-border) | <img src="samples/landscape-antique-border.jpg" width="300"> | <img src="samples/cat-antique-border.jpg" width="300">
-[First Photo Border](scripts/technicolor-2) | <img src="samples/landscape-cut-off.jpg" width="300"> | <img src="samples/cat-cut-off.jpg" width="300">
+[First Photo Border](scripts/photo-border) | <img src="samples/landscape-cut-off.jpg" width="300"> | <img src="samples/cat-cut-off.jpg" width="300">
 [National Geographic](scripts/national-geographic) | <img src="samples/landscape-ng.jpg" width="300"> | <img src="samples/cat-ng.jpg" width="300">
 [Split Tone with Edge Detection](scripts/split-tone-edge) | <img src="samples/landscape-split-tone-ED.jpg" width="300"> | <img src="samples/cat-split-tone-ED.jpg" width="300">
 [Film Grain](scripts/film-grain) | <img src="samples/landscape-grain.jpg" width="300"> | <img src="samples/cat-grain.jpg" width="300">
