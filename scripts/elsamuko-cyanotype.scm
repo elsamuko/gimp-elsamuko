@@ -26,36 +26,36 @@
                             overlay
                             blackwhite)
   (let* ((img (car (gimp-item-get-image adraw)))
-         (owidth (car (gimp-image-width img)))
-         (oheight (car (gimp-image-height img)))
+         (owidth (car (gimp-image-get-width img)))
+         (oheight (car (gimp-image-get-height img)))
          (tmplayer1 0)         
          (tmplayer2 0)         
          (contrastlayer 0)
          (bw-layer 0)
          (overlay-layer (car (gimp-layer-copy adraw FALSE)))
          (blue-layer (car (gimp-layer-new img
+                                          "Prussian Blue"
                                           owidth 
                                           oheight
                                           RGBA-IMAGE
-                                          "Prussian Blue" 
                                           100 
-                                          NORMAL-MODE)))
-         (blue-mask (car (gimp-layer-create-mask blue-layer ADD-WHITE-MASK)))
+                                          LAYER-MODE-NORMAL)))
+         (blue-mask (car (gimp-layer-create-mask blue-layer ADD-MASK-WHITE)))
          (white-layer (car (gimp-layer-new img
+                                           "Aged White"
                                            owidth 
                                            oheight
                                            RGBA-IMAGE
-                                           "Aged White" 
                                            100 
-                                           NORMAL-MODE)))
-         (white-mask (car (gimp-layer-create-mask white-layer ADD-WHITE-MASK)))
+                                           LAYER-MODE-NORMAL)))
+         (white-mask (car (gimp-layer-create-mask white-layer ADD-MASK-WHITE)))
          (blue-overlay-layer (car (gimp-layer-new img
+                                                  "Blue Overlay"
                                                   owidth 
                                                   oheight
                                                   RGBA-IMAGE
-                                                  "Blue Overlay" 
                                                   80 
-                                                  OVERLAY-MODE)))
+                                                  LAYER-MODE-OVERLAY)))
          )
     
     ; init
@@ -99,9 +99,9 @@
     (gimp-image-insert-layer img white-layer 0 -1)
     (gimp-selection-all aimg)
     (gimp-context-set-foreground color1)
-    (gimp-edit-bucket-fill blue-layer FG-BUCKET-FILL NORMAL-MODE 100 0 FALSE 0 0)
+    (gimp-drawable-edit-bucket-fill blue-layer)
     (gimp-context-set-foreground color2)
-    (gimp-edit-bucket-fill white-layer FG-BUCKET-FILL NORMAL-MODE 100 0 FALSE 0 0)
+    (gimp-drawable-edit-bucket-fill white-layer)
     
     ;add layer masks
     (gimp-edit-copy adraw)
@@ -116,7 +116,7 @@
        (begin
          (gimp-image-insert-layer img overlay-layer 0 -1)
          (gimp-item-set-name overlay-layer "Overlay")
-         (gimp-layer-set-mode overlay-layer OVERLAY-MODE)
+         (gimp-layer-set-mode overlay-layer LAYER-MODE-OVERLAY)
          (gimp-layer-set-opacity overlay-layer overlay)
          (gimp-desaturate-full overlay-layer DESATURATE-LIGHTNESS)
          )
@@ -126,7 +126,7 @@
     (gimp-image-insert-layer img blue-overlay-layer 0 -1)
     (gimp-selection-all aimg)
     (gimp-context-set-foreground color1)
-    (gimp-edit-bucket-fill blue-overlay-layer FG-BUCKET-FILL NORMAL-MODE 100 0 FALSE 0 0)
+    (gimp-drawable-edit-bucket-fill blue-overlay-layer)
     (gimp-selection-none img)
     
     ; tidy up

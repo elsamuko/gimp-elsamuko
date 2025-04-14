@@ -54,7 +54,7 @@
         (gimp-item-set-visible y-layer FALSE)
         
         ;blend x-layer slightly
-        (gimp-layer-set-mode gravure-layer OVERLAY-MODE)
+        (gimp-layer-set-mode gravure-layer LAYER-MODE-OVERLAY)
         (gimp-layer-set-opacity gravure-layer 80)
         
         ; tidy up

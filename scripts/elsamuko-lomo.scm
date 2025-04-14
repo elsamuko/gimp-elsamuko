@@ -74,8 +74,8 @@
                        centerx centery aradius)
   (let* ( (img (car (gimp-item-get-image adraw)))
           (draw (car (gimp-layer-copy adraw FALSE))) 
-          (owidth (car (gimp-image-width img)))
-          (oheight (car (gimp-image-height img)))
+          (owidth (car (gimp-image-get-width img)))
+          (oheight (car (gimp-image-get-height img)))
           (halfwidth (/ owidth 2))
           (halfheight (/ oheight 2))
           (endingx 0)
@@ -110,41 +110,41 @@
           (x_black (+ (- halfwidth  (* multi (/ amiddle 2))) (* owidth (/ centerx 100))))
           (y_black (- (- halfheight (* multi (/ amiddle 2))) (* oheight (/ centery 100))))
           (vignette (car (gimp-layer-new img
+                                         "Vignette"
                                          owidth 
                                          oheight
                                          1
-                                         "Vignette" 
                                          100 
-                                         OVERLAY-MODE)))
+                                         LAYER-MODE-OVERLAY)))
           (hvignette (car (gimp-layer-new img
+                                          "Vignette" 
                                           owidth 
                                           oheight
                                           1
-                                          "Vignette" 
                                           100 
-                                          OVERLAY-MODE)))
+                                          LAYER-MODE-OVERLAY)))
           (overexpo (car (gimp-layer-new img
+                                         "Over Exposure" 
                                          owidth 
                                          oheight
                                          1
-                                         "Over Exposure" 
                                          80 
-                                         OVERLAY-MODE)))
+                                         LAYER-MODE-OVERLAY)))
           (black_vignette (car (gimp-layer-new img
+                                               "Black Vignette" 
                                                owidth 
                                                oheight
                                                1
-                                               "Black Vignette" 
                                                100 
-                                               NORMAL-MODE)))
+                                               LAYER-MODE-NORMAL)))
           (grain-layer (car (gimp-layer-new img
+                                            "Grain" 
                                             owidth 
                                             oheight
                                             1
-                                            "Grain" 
                                             100 
-                                            OVERLAY-MODE)))
-          (grain-layer-mask (car (gimp-layer-create-mask grain-layer ADD-WHITE-MASK)))
+                                            LAYER-MODE-OVERLAY)))
+          (grain-layer-mask (car (gimp-layer-create-mask grain-layer ADD-MASK-WHITE)))
           )
     
     ; init
@@ -179,8 +179,8 @@
     (gimp-item-set-name draw "Process Copy")
     
     ; adjust contrast, saturation 
-    (gimp-brightness-contrast draw 0 acon)
-    (gimp-hue-saturation draw ALL-HUES 0 0 asat)
+    (gimp-drawable-brightness-contrast draw 0 acon)
+    (gimp-drawable-hue-saturation draw HUE-RANGE-ALL 0 0 asat)
     
     ;wide angle lens distortion
     (if (> wide_angle 0) 
@@ -243,21 +243,21 @@
     ;vintage-look script from mm1 (http://registry.gimp.org/node/1348)
     (if(= c41 6)(begin
                   ;Yellow Layer
-                  (set! yellow-layer (car (gimp-layer-new img owidth oheight RGB "Yellow" 100  MULTIPLY-MODE)))	
+                  (set! yellow-layer (car (gimp-layer-new img "Yellow" owidth oheight RGB 100  MULTIPLY-MODE)))	
                   (gimp-image-insert-layer img yellow-layer 0 -1)
                   (gimp-context-set-background '(251 242 163))
                   (gimp-drawable-fill yellow-layer BACKGROUND-FILL)
                   (gimp-layer-set-opacity yellow-layer 59)
                   
                   ;Magenta Layer
-                  (set! magenta-layer (car (gimp-layer-new img owidth oheight RGB "Magenta" 100  SCREEN-MODE)))	
+                  (set! magenta-layer (car (gimp-layer-new img "Magenta" owidth oheight RGB 100  SCREEN-MODE)))	
                   (gimp-image-insert-layer img magenta-layer 0 -1)
                   (gimp-context-set-background '(232 101 179))
                   (gimp-drawable-fill magenta-layer BACKGROUND-FILL)
                   (gimp-layer-set-opacity magenta-layer 20)
                   
                   ;Cyan Layer 
-                  (set! cyan-layer (car (gimp-layer-new img owidth oheight RGB "Cyan" 100  SCREEN-MODE)))	
+                  (set! cyan-layer (car (gimp-layer-new img "Cyan" owidth oheight RGB 100  SCREEN-MODE)))	
                   (gimp-image-insert-layer img cyan-layer 0 -1)
                   (gimp-context-set-background '(9 73 233))
                   (gimp-drawable-fill cyan-layer BACKGROUND-FILL)
@@ -392,8 +392,8 @@
     (gimp-context-set-background '(255 255 255)) ;white
     (gimp-image-insert-layer img overexpo 0 -1)
     (gimp-image-insert-layer img vignette 0 -1)
-    (gimp-drawable-fill vignette TRANSPARENT-FILL)
-    (gimp-drawable-fill overexpo TRANSPARENT-FILL)
+    (gimp-drawable-fill vignette FILL-TRANSPARENT)
+    (gimp-drawable-fill overexpo FILL-TRANSPARENT)
     
     ;compute blend ending point depending on image orientation
     (if (> owidth oheight) 
@@ -435,12 +435,12 @@
     (if (= is_black TRUE) 
         ( begin 
            (gimp-image-insert-layer img black_vignette 0 -1)
-           (gimp-drawable-fill black_vignette TRANSPARENT-FILL)
+           (gimp-drawable-fill black_vignette FILL-TRANSPARENT)
            (gimp-image-select-ellipse img CHANNEL-OP-REPLACE x_black y_black radius radius)
            (gimp-selection-feather img (* radius 0.2))
            (gimp-selection-invert img)
            (gimp-context-set-foreground '(0 0 0))
-           (gimp-edit-bucket-fill black_vignette FG-BUCKET-FILL NORMAL-MODE 100 0 FALSE 0 0)
+           (gimp-drawable-edit-bucket-fill black_vignette)
            (gimp-selection-none img)
            )
         )
@@ -450,10 +450,10 @@
         ( begin 
            ;fill new layer with neutral gray
            (gimp-image-insert-layer img grain-layer 0 -1)
-           (gimp-drawable-fill grain-layer TRANSPARENT-FILL)
+           (gimp-drawable-fill grain-layer FILL-TRANSPARENT)
            (gimp-context-set-foreground '(128 128 128))
            (gimp-selection-all img)
-           (gimp-edit-bucket-fill grain-layer FG-BUCKET-FILL NORMAL-MODE 100 0 FALSE 0 0)
+           (gimp-drawable-edit-bucket-fill grain-layer)
            (gimp-selection-none img)
            
            ;add grain and blur it
@@ -498,7 +498,7 @@
          (gimp-levels-stretch (aref MaskLayer 0))
          (gimp-image-convert-grayscale MaskImage)
          (plug-in-gauss TRUE MaskImage (aref MaskLayer 0) 6 6 TRUE)
-         (let* ((SharpenChannel (car (gimp-layer-create-mask SharpenLayer ADD-WHITE-MASK)))
+         (let* ((SharpenChannel (car (gimp-layer-create-mask SharpenLayer ADD-MASK-WHITE)))
                 )
            (gimp-layer-add-mask SharpenLayer SharpenChannel)
            (gimp-selection-all MaskImage)
@@ -575,11 +575,11 @@ Latest version can be downloaded from http://registry.gimp.org/node/7870"
                     SF-DRAWABLE    "Input drawable"        0
                     SF-ADJUSTMENT _"Vignetting Softness"   '(1.5 1 2 0.1 0.5 1 0)
                     SF-ADJUSTMENT _"Saturation"            '(10 -40  40  1 5 1 0)
-                    SF-ADJUSTMENT _"Contrast"              '(10   0  40  1 5 1 0)
+                    SF-ADJUSTMENT _"Contrast"              '(0.1  0  0.4 1 5 1 0)
                     SF-ADJUSTMENT _"Sharpness"             '(0.8 0 2 0.1 0.2 1 0)
-                    SF-ADJUSTMENT _"Wide Angle Distortion" '(5 0 13 0.1 0.5 1 0)
-                    SF-ADJUSTMENT _"Gauss Blur"            '(1 0  5 0.1 0.5 1 0)
-                    SF-ADJUSTMENT _"Motion Blur"           '(3 0  5 0.1 0.5 1 0)
+                    SF-ADJUSTMENT _"Wide Angle Distortion" '(0 0 13 0.1 0.5 1 0)
+                    SF-ADJUSTMENT _"Gauss Blur"            '(0 0  5 0.1 0.5 1 0)
+                    SF-ADJUSTMENT _"Motion Blur"           '(0 0  5 0.1 0.5 1 0)
                     SF-ADJUSTMENT _"Grain"                 '(128 0 255 1 20 0 0)
                     SF-OPTION     _"Colors"                '("Neutral"
                                                              "Old Red"

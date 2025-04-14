@@ -28,8 +28,8 @@
                                   num1 num2
                                   wb)
   (let* ((img (car (gimp-item-get-image adraw)))
-         (owidth (car (gimp-image-width img)))
-         (oheight (car (gimp-image-height img)))
+         (owidth (car (gimp-image-get-width img)))
+         (oheight (car (gimp-image-get-height img)))
          
          (working-layer (car (gimp-layer-copy adraw FALSE)))
          (extract-layer (car (gimp-layer-copy adraw FALSE)))
@@ -44,41 +44,41 @@
          (offset2 (* oheight (/ num2 100)))
          
          (overlay-layer (car (gimp-layer-new img
+                                             "Yellow Cast"
                                              owidth 
                                              oheight
                                              1
-                                             "Yellow Cast" 
                                              60 
-                                             OVERLAY-MODE)))
-         (overlay-layer-mask (car (gimp-layer-create-mask overlay-layer ADD-WHITE-MASK)))
+                                             LAYER-MODE-OVERLAY)))
+         (overlay-layer-mask (car (gimp-layer-create-mask overlay-layer ADD-MASK-WHITE)))
          
          
          (sub-blue-layer (car (gimp-layer-new img
+                                              "Sub Blue"
                                               owidth 
                                               oheight
                                               1
-                                              "Sub Blue" 
                                               100 
-                                              NORMAL-MODE)))
-         (sub-blue-layer-mask (car (gimp-layer-create-mask sub-blue-layer ADD-WHITE-MASK)))
+                                              LAYER-MODE-NORMAL)))
+         (sub-blue-layer-mask (car (gimp-layer-create-mask sub-blue-layer ADD-MASK-WHITE)))
          
          (top-blue-layer (car (gimp-layer-new img
+                                              "Top Blue"
                                               owidth 
                                               oheight
                                               1
-                                              "Top Blue" 
                                               65 
-                                              NORMAL-MODE)))
-         (top-blue-layer-mask (car (gimp-layer-create-mask top-blue-layer ADD-WHITE-MASK)))
+                                              LAYER-MODE-NORMAL)))
+         (top-blue-layer-mask (car (gimp-layer-create-mask top-blue-layer ADD-MASK-WHITE)))
          
          (cloud-layer (car (gimp-layer-new img
+                                           "Clouds"
                                            owidth 
                                            oheight
                                            1
-                                           "Clouds" 
                                            60 
                                            SCREEN-MODE)))
-         (cloud-layer-mask (car (gimp-layer-create-mask cloud-layer ADD-WHITE-MASK)))
+         (cloud-layer-mask (car (gimp-layer-create-mask cloud-layer ADD-MASK-WHITE)))
          )
     
     ; init
@@ -126,8 +126,8 @@
     (gimp-curves-spline working-layer HISTOGRAM-VALUE 8 (spline-brightness))
     
     ;hues
-    (if(> ylight 0) (gimp-hue-saturation working-layer YELLOW-HUES 0 ylight 0))
-    (if(> glight 0) (gimp-hue-saturation working-layer GREEN-HUES 0 glight 0))
+    (if(> ylight 0) (gimp-drawable-hue-saturation working-layer YELLOW-HUES 0 ylight 0))
+    (if(> glight 0) (gimp-drawable-hue-saturation working-layer GREEN-HUES 0 glight 0))
     
     ;desaturate a bit
     (set! desat-layer (car (gimp-layer-copy working-layer FALSE)))
@@ -140,7 +140,7 @@
     (gimp-image-insert-layer img overlay-layer 0 -1)
     (gimp-context-set-foreground sunshine)
     (gimp-selection-all img)
-    (gimp-edit-bucket-fill overlay-layer FG-BUCKET-FILL NORMAL-MODE 100 0 FALSE 0 0)
+    (gimp-drawable-edit-bucket-fill overlay-layer)
     (gimp-edit-copy working-layer)
     (gimp-layer-add-mask overlay-layer overlay-layer-mask)
     (gimp-floating-sel-anchor (car (gimp-edit-paste overlay-layer-mask TRUE)))
@@ -153,7 +153,7 @@
     (gimp-selection-all aimg)
     (gimp-context-set-foreground sky)
     (gimp-edit-blend sub-blue-layer FG-TRANSPARENT-MODE
-                     NORMAL-MODE GRADIENT-LINEAR
+                     LAYER-MODE-NORMAL GRADIENT-LINEAR
                      100 0 REPEAT-NONE
                      TRUE FALSE 1 0
                      TRUE 0 offset2 0 offset1)
@@ -173,7 +173,7 @@
     (plug-in-solid-noise 1 img cloud-layer 0 0 (random 100) 4 3.5 7.0)
     (gimp-context-set-foreground sky)
     (gimp-selection-all img)
-    (gimp-edit-bucket-fill cloud-layer FG-BUCKET-FILL OVERLAY-MODE 100 0 FALSE 0 0)
+    (gimp-drawable-edit-bucket-fill cloud-layer FG-BUCKET-FILL LAYER-MODE-OVERLAY 100 0 FALSE 0 0)
     (gimp-selection-none img)
     
     (gimp-context-set-foreground '(255 255 255))

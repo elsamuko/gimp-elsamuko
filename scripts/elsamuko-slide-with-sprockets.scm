@@ -24,8 +24,8 @@
 
 (define (elsamuko-sprocketholes aimg adraw phototext dx1 dx2 font framenumber framenumberhole firstsh shcolor letteringcolor)
   (let* ((img (car (gimp-item-get-image adraw)))
-         (owidth (car (gimp-image-width img)))
-         (oheight (car (gimp-image-height img))) ;35mm
+         (owidth (car (gimp-image-get-width img)))
+         (oheight (car (gimp-image-get-height img))) ;35mm
          (mm (/ oheight 35)) ;1 mm
          (framewidth (* 38 mm)) ;width of a single frame
          (shheight (* 3 mm)) ;sh = sprocketholes
@@ -43,31 +43,31 @@
          (textlength (string-length phototext))
          (x 0) ;helper var
          (shlayer (car (gimp-layer-new img
+                                       "Sprocket Holes"
                                        owidth 
                                        oheight
                                        1
-                                       "Sprocket Holes" 
                                        100 
-                                       NORMAL-MODE)))
+                                       LAYER-MODE-NORMAL)))
          (smearlayer (car (gimp-layer-new img
+                                          "Smearing"
                                           owidth 
                                           oheight
                                           1
-                                          "Smearing" 
                                           100 
                                           ADDITION-MODE)))
          (smearlayer2 (car (gimp-layer-new img
+                                           "Smearing2"
                                            owidth 
                                            oheight
                                            1
-                                           "Smearing2" 
                                            100 
                                            GRAIN-MERGE-MODE)))
          (letteringlayer (car (gimp-layer-new img
+                                              "Lettering"
                                               owidth 
                                               oheight
                                               1
-                                              "Lettering" 
                                               100 
                                               ADDITION-MODE)))
          )
@@ -170,7 +170,7 @@
     
     ;add lettering
     (gimp-image-insert-layer img letteringlayer 0 -1)
-    (gimp-drawable-fill letteringlayer TRANSPARENT-FILL)
+    (gimp-drawable-fill letteringlayer FILL-TRANSPARENT)
     (gimp-context-set-foreground letteringcolor)
     
     (set! x framenumber)
@@ -220,7 +220,7 @@
                            (* 13 mm)
                            (* 2.2 mm)
                            dx1 dx2 framenumber 0) ;dx1 dx2 fn A
-           (gimp-edit-bucket-fill letteringlayer FG-BUCKET-FILL NORMAL-MODE 100 0 FALSE 0 0)
+           (gimp-drawable-edit-bucket-fill letteringlayer)
            (gimp-selection-none img)
            
            ;framenumberA
@@ -243,7 +243,7 @@
                                              (+ (- distancetofirstnumber  mm) (* (- framenumber (- x 0.5)) framewidth))
                                              (+ (* 0.945 oheight) (* 1.5 mm))
                                              )) 
-           (gimp-edit-bucket-fill letteringlayer FG-BUCKET-FILL NORMAL-MODE 100 0 FALSE 0 0)
+           (gimp-drawable-edit-bucket-fill letteringlayer)
            (gimp-selection-none img)
            
            ;dxA
@@ -253,7 +253,7 @@
                            (* 13 mm)
                            (* 2.2 mm)
                            dx1 dx2 framenumber 1) ;dx1 dx2 fn A
-           (gimp-edit-bucket-fill letteringlayer FG-BUCKET-FILL NORMAL-MODE 100 0 FALSE 0 0)
+           (gimp-drawable-edit-bucket-fill letteringlayer)
            (gimp-selection-none img)
            
            (set! framenumber (+ framenumber 1))
@@ -261,7 +261,7 @@
     
     ;add new layer and set sprocket holes
     (gimp-image-insert-layer img shlayer 0 -1)
-    (gimp-drawable-fill shlayer TRANSPARENT-FILL)
+    (gimp-drawable-fill shlayer FILL-TRANSPARENT)
     
     (while (< holenumber (+ numberofshs 5))
            (set! x ( + distancetofirstsh (* holenumber shdistance) ))
@@ -276,24 +276,24 @@
            (set! holenumber (+ holenumber 1))
            )
     ;    (gimp-context-set-foreground letteringcolor)
-    ;    (gimp-edit-bucket-fill shlayer FG-BUCKET-FILL NORMAL-MODE 100 0 FALSE 0 0)
+    ;    (gimp-drawable-edit-bucket-fill shlayer)
     ;    (gimp-selection-shrink img 1)
     (gimp-context-set-foreground shcolor)
-    (gimp-edit-bucket-fill shlayer FG-BUCKET-FILL NORMAL-MODE 100 0 FALSE 0 0)
+    (gimp-drawable-edit-bucket-fill shlayer)
     
     ;smear sprocket holes
     (gimp-image-insert-layer img smearlayer 0 -1)
     (gimp-image-lower-item img smearlayer)
-    (gimp-drawable-fill smearlayer TRANSPARENT-FILL)
+    (gimp-drawable-fill smearlayer FILL-TRANSPARENT)
     (gimp-selection-grow img (* 0.2 mm))
     (gimp-selection-feather img (* 1 mm))
     (gimp-context-set-foreground letteringcolor)
-    (gimp-edit-bucket-fill smearlayer FG-BUCKET-FILL NORMAL-MODE 100 0 FALSE 0 0)
+    (gimp-drawable-edit-bucket-fill smearlayer)
     
     (gimp-selection-grow img (* 0.2 mm))
     (gimp-image-insert-layer img smearlayer2 0 -1)
     (gimp-image-lower-item img smearlayer2)
-    (gimp-drawable-fill smearlayer2 TRANSPARENT-FILL)
+    (gimp-drawable-fill smearlayer2 FILL-TRANSPARENT)
     (gimp-edit-copy adraw)
     (gimp-floating-sel-anchor (car (gimp-edit-paste smearlayer2 TRUE)))
     

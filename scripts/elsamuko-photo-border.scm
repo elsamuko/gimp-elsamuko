@@ -30,39 +30,39 @@
     ; init
     (define (script-fu-photo-border-helper aimg adraw ashift aradius border_distance)
       (let*  ((img (car (gimp-item-get-image adraw)))
-              (owidth (car (gimp-image-width img)))
-              (oheight (car (gimp-image-height img)))
+              (owidth (car (gimp-image-get-width img)))
+              (oheight (car (gimp-image-get-height img)))
               (arith_med (/ (+ owidth oheight) 2))
               (xcoord 0)
               (ycoord 0)
               (radius 0)
               (thickness 0)
               (soft_margin (car (gimp-layer-new img
+                                                "Soft Margin"
                                                 owidth 
                                                 oheight
                                                 1
-                                                "Soft Margin"
                                                 100 
                                                 ADDITION-MODE)))
               (soft_margin_2 (car (gimp-layer-new img
+                                                  "Soft Margin 2"
                                                   owidth 
                                                   oheight
                                                   1
-                                                  "Soft Margin 2"
                                                   100 
-                                                  OVERLAY-MODE)))
+                                                  LAYER-MODE-OVERLAY)))
               (hard_margin (car (gimp-layer-new img
+                                                "Hard Margin"
                                                 owidth 
                                                 oheight
                                                 1
-                                                "Hard Margin"
                                                 100 
-                                                NORMAL-MODE)))
+                                                LAYER-MODE-NORMAL)))
               )
         
         ;one layer with soft, red ending
         (gimp-image-insert-layer img soft_margin 0 -1)
-        (gimp-drawable-fill soft_margin TRANSPARENT-FILL)
+        (gimp-drawable-fill soft_margin FILL-TRANSPARENT)
         
         (set! radius (* aradius oheight)) ;radius is diameter...
         (set! ycoord (* border_distance oheight))
@@ -73,12 +73,12 @@
         (gimp-selection-feather img thickness)
         (gimp-selection-invert img)
         (gimp-context-set-foreground '(174 28 14))
-        (gimp-edit-bucket-fill soft_margin FG-BUCKET-FILL NORMAL-MODE 100 0 FALSE 0 0)
+        (gimp-drawable-edit-bucket-fill soft_margin)
         (gimp-selection-none img)
         
         ;one layer with hard, white (overexposed) ending
         (gimp-image-insert-layer img hard_margin 0 -1)
-        (gimp-drawable-fill hard_margin TRANSPARENT-FILL)
+        (gimp-drawable-fill hard_margin FILL-TRANSPARENT)
 
         ; make taller to prevent mblur leaking on top
         (gimp-layer-resize hard_margin owidth (+ oheight thickness) 0 thickness)
@@ -91,7 +91,7 @@
         (script-fu-distress-selection img hard_margin 127 12 2 2 FALSE TRUE)
         (script-fu-distress-selection img hard_margin 127 12 1 2 FALSE TRUE)
         (gimp-context-set-foreground '(255 255 255))
-        (gimp-edit-bucket-fill hard_margin FG-BUCKET-FILL NORMAL-MODE 100 0 FALSE 0 0)
+        (gimp-drawable-edit-bucket-fill hard_margin)
         (gimp-selection-none img)
         (plug-in-mblur 1 img hard_margin 0 (* thickness 0.4) 90 0 0)
         (plug-in-unsharp-mask 1 img hard_margin 5 2 0)

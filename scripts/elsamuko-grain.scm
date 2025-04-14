@@ -24,17 +24,17 @@
 
 (define (elsamuko-grain aimg adraw holdness value strength grainblur blackwhite)
   (let* ((img (car (gimp-item-get-image adraw)))
-         (owidth (car (gimp-image-width img)))
-         (oheight (car (gimp-image-height img)))
+         (owidth (car (gimp-image-get-width img)))
+         (oheight (car (gimp-image-get-height img)))
          (bw-layer (car (gimp-layer-copy adraw FALSE)))
          (grainlayer (car (gimp-layer-new img
+                                          "Grain"
                                           owidth 
                                           oheight
                                           1
-                                          "Grain" 
                                           100 
-                                          OVERLAY-MODE)))
-         (grainlayermask (car (gimp-layer-create-mask grainlayer ADD-WHITE-MASK)))
+                                          LAYER-MODE-OVERLAY)))
+         (grainlayermask (car (gimp-layer-create-mask grainlayer ADD-MASK-WHITE)))
          (floatingsel 0)
          )
     
@@ -73,10 +73,10 @@
     
     ;fill new layer with neutral gray
     (gimp-image-insert-layer img grainlayer 0 -1)
-    (gimp-drawable-fill grainlayer TRANSPARENT-FILL)
+    (gimp-drawable-fill grainlayer FILL-TRANSPARENT)
     (gimp-context-set-foreground '(128 128 128))
     (gimp-selection-all img)
-    (gimp-edit-bucket-fill grainlayer FG-BUCKET-FILL NORMAL-MODE 100 0 FALSE 0 0)
+    (gimp-drawable-edit-bucket-fill grainlayer)
     (gimp-selection-none img)
     
     ;add grain and blur it

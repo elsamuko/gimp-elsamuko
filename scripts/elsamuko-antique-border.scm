@@ -23,8 +23,8 @@
 
 (define (elsamuko-antique-border aimg adraw thicknesspercent radiuspercent color granularity smooth motion resize)
   (let* ((img (car (gimp-item-get-image adraw)))
-         (owidth (car (gimp-image-width img)))
-         (oheight (car (gimp-image-height img)))
+         (owidth (car (gimp-image-get-width img)))
+         (oheight (car (gimp-image-get-height img)))
          ;the border has to reach a little bit into the image, if it's resized:
          (thickness (- (* owidth (/ thicknesspercent 100)) granularity))
          )
@@ -32,22 +32,22 @@
     ; init
     (define (script-fu-antique-border-helper aimg adraw thicknesspercent radiuspercent color granularity smooth motion)
       (let* ((img (car (gimp-item-get-image adraw)))
-             (owidth (car (gimp-image-width img)))
+             (owidth (car (gimp-image-get-width img)))
              (thickness (* owidth (/ thicknesspercent 100)))
              (radius (* owidth (/ radiuspercent 100))) 
-             (oheight (car (gimp-image-height img)))
+             (oheight (car (gimp-image-get-height img)))
              (borderlayer (car (gimp-layer-new img
+                                               "Border"
                                                owidth 
                                                oheight
                                                1
-                                               "Border" 
                                                100 
-                                               NORMAL-MODE)))
+                                               LAYER-MODE-NORMAL)))
              )
         
         ;add new layer
         (gimp-image-insert-layer img borderlayer 0 -1)
-        (gimp-drawable-fill borderlayer TRANSPARENT-FILL)
+        (gimp-drawable-fill borderlayer FILL-TRANSPARENT)
         
         ;select rounded rectangle, distress and invert it
         (gimp-image-select-round-rectangle img CHANNEL-OP-REPLACE
@@ -61,7 +61,7 @@
         
         ;fill up with border color
         (gimp-context-set-foreground color)
-        (gimp-edit-bucket-fill borderlayer FG-BUCKET-FILL NORMAL-MODE 100 0 FALSE 0 0)
+        (gimp-drawable-edit-bucket-fill borderlayer)
         (gimp-selection-none img)
         
         ;blur border

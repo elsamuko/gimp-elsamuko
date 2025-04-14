@@ -47,7 +47,7 @@
         
         ;subtract second from first
         (gimp-image-lower-item img top-layer)
-        (gimp-layer-set-mode top-layer NORMAL-MODE)
+        (gimp-layer-set-mode top-layer LAYER-MODE-NORMAL)
         (gimp-layer-set-mode bottom-layer SUBTRACT-MODE)
         (gimp-edit-copy-visible img)
         (set! additive-layer (car (gimp-layer-new-from-visible img img "Additive") ))
@@ -57,7 +57,7 @@
         (gimp-layer-set-mode additive-layer ADDITION-MODE)
         (gimp-layer-set-mode subtractive-layer SUBTRACT-MODE)
         
-        (gimp-layer-set-mode bottom-layer NORMAL-MODE)
+        (gimp-layer-set-mode bottom-layer LAYER-MODE-NORMAL)
         
         ; tidy up
         (gimp-image-undo-group-end img)

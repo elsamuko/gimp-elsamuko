@@ -32,8 +32,8 @@
                                       retro
                                       extra)
   (let* ((img          (car (gimp-item-get-image adraw)))
-         (owidth       (car (gimp-image-width img)))
-         (oheight      (car (gimp-image-height img)))
+         (owidth       (car (gimp-image-get-width img)))
+         (oheight      (car (gimp-image-get-height img)))
          (sharpenlayer (car (gimp-layer-copy adraw FALSE)))
          (floatingsel  0)
          
@@ -43,32 +43,32 @@
          (tmplayer     (car (gimp-layer-copy adraw FALSE)))
          (extralayer  0)
          (purplelayer  (car (gimp-layer-new img
+                                            "Retro Layer"
                                             owidth 
                                             oheight
                                             1
-                                            "Retro Layer" 
                                             100 
                                             SUBTRACT-MODE)))
          
          ;         (redmultiplylayer   (car (gimp-layer-new img
+         ;                                                  "Red Multiply"
          ;                                                  owidth 
          ;                                                  oheight
          ;                                                  1
-         ;                                                  "Red Multiply" 
          ;                                                  redintensity
          ;                                                  MULTIPLY-MODE)))
          ;         (greenmultiplylayer (car (gimp-layer-new img
+         ;                                                  "Green Multiply"
          ;                                                  owidth 
          ;                                                  oheight
          ;                                                  1
-         ;                                                  "Green Multiply" 
          ;                                                  greenintensity
          ;                                                  MULTIPLY-MODE)))
          ;         (bluemultiplylayer  (car (gimp-layer-new img
+         ;                                                  "Blue Multiply"
          ;                                                  owidth 
          ;                                                  oheight
          ;                                                  1
-         ;                                                  "Blue Multiply" 
          ;                                                  blueintensity
          ;                                                  MULTIPLY-MODE)))
          
@@ -120,15 +120,15 @@
     
     (gimp-image-insert-layer img greenlayer 0 -1)
     ;(gimp-image-insert-layer img greenmultiplylayer -1)
-    ;(gimp-drawable-fill greenmultiplylayer TRANSPARENT-FILL)
+    ;(gimp-drawable-fill greenmultiplylayer FILL-TRANSPARENT)
     
     (gimp-image-insert-layer img bluelayer  0 -1)
     ;(gimp-image-insert-layer img bluemultiplylayer  -1)
-    ;(gimp-drawable-fill bluemultiplylayer  TRANSPARENT-FILL)
+    ;(gimp-drawable-fill bluemultiplylayer  FILL-TRANSPARENT)
     
     (gimp-image-insert-layer img redlayer   0 -1)
     ;(gimp-image-insert-layer img redmultiplylayer   -1)
-    ;(gimp-drawable-fill redmultiplylayer   TRANSPARENT-FILL)
+    ;(gimp-drawable-fill redmultiplylayer   FILL-TRANSPARENT)
     
     
     (plug-in-colors-channel-mixer 1 img redlayer TRUE
@@ -161,13 +161,13 @@
     (gimp-selection-all img)
     
     (gimp-context-set-foreground cyanfill)
-    (gimp-edit-bucket-fill redlayer   FG-BUCKET-FILL SCREEN-MODE 100 0 FALSE 0 0)
+    (gimp-drawable-edit-bucket-fill redlayer   FG-BUCKET-FILL SCREEN-MODE 100 0 FALSE 0 0)
     
     (gimp-context-set-foreground magentafill)
-    (gimp-edit-bucket-fill greenlayer FG-BUCKET-FILL SCREEN-MODE 100 0 FALSE 0 0)
+    (gimp-drawable-edit-bucket-fill greenlayer FG-BUCKET-FILL SCREEN-MODE 100 0 FALSE 0 0)
     
     (gimp-context-set-foreground yellowfill)
-    (gimp-edit-bucket-fill bluelayer  FG-BUCKET-FILL SCREEN-MODE 100 0 FALSE 0 0)
+    (gimp-drawable-edit-bucket-fill bluelayer  FG-BUCKET-FILL SCREEN-MODE 100 0 FALSE 0 0)
     
     (gimp-layer-set-mode redlayer   MULTIPLY-MODE)
     (gimp-layer-set-mode greenlayer MULTIPLY-MODE)
@@ -195,7 +195,7 @@
          (gimp-image-insert-layer img sharpenlayer 0 0)
          (gimp-desaturate-full sharpenlayer DESATURATE-LIGHTNESS)
          (plug-in-unsharp-mask 1 img sharpenlayer 5 1 0)
-         (gimp-layer-set-mode sharpenlayer OVERLAY-MODE)
+         (gimp-layer-set-mode sharpenlayer LAYER-MODE-OVERLAY)
          (gimp-layer-set-opacity sharpenlayer sharpen)
          ;(set! floatingsel (car (gimp-layer-create-mask sharpenlayer 5)))
          ;(gimp-layer-add-mask sharpenlayer floatingsel)
@@ -216,10 +216,10 @@
     (if(= retro TRUE)
        (begin
          (gimp-image-insert-layer img purplelayer 0 -1)
-         (gimp-drawable-fill purplelayer TRANSPARENT-FILL)
+         (gimp-drawable-fill purplelayer FILL-TRANSPARENT)
          (gimp-context-set-foreground '(62 25 55))
          (gimp-selection-all img)
-         (gimp-edit-bucket-fill purplelayer FG-BUCKET-FILL NORMAL-MODE 100 0 FALSE 0 0)
+         (gimp-drawable-edit-bucket-fill purplelayer)
          (gimp-selection-none img)
          (gimp-layer-set-opacity purplelayer 80)
          (gimp-layer-set-opacity redlayer 80)
