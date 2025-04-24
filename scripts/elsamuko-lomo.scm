@@ -158,12 +158,7 @@
         )
       )
     (define (splineValue)
-      (let* ((a (cons-array 6 'byte)))
-        (set-pt a 0 0 0)
-        (set-pt a 1 128 grain)
-        (set-pt a 2 255 0)
-        a
-        )
+      #(0 0 128 grain 255 0)
       )
     
     ;(gimp-message (number->string (car (gimp-drawable-is-gray adraw ))))
@@ -184,7 +179,9 @@
     
     ;wide angle lens distortion
     (if (> wide_angle 0) 
-        (plug-in-lens-distortion 1 img draw 0 0 wide_angle 0 9 0)
+        ; (plug-in-lens-distortion 1 img draw 0 0 wide_angle 0 9 0)
+        (gimp-drawable-merge-new-filter draw "gegl:lens-distortion" 0 LAYER-MODE-REPLACE 1.0
+                        "main" wide_angle)
         )
     
     ;gauss blur as general focusing error
@@ -410,9 +407,16 @@
     ;apply a reverse radial blend on layer
     ;then scale layer by "avig" factor with a local origin
     ;if double vignetting is needed, duplicate layer and set duplicate opacity to 80%
-    (gimp-edit-blend vignette 2 0 2 100 0 REPEAT-NONE TRUE FALSE 0 0 TRUE blend_x blend_y endingx endingy)
+    ; GIMP-3
+    ; (gimp-edit-blend vignette 2 0 2 100 0 REPEAT-NONE TRUE FALSE 0 0 TRUE blend_x blend_y endingx endingy)
+    (gimp-drawable-edit-gradient-fill vignette
+                  GRADIENT-RADIAL 0
+                  FALSE 1 0
+                  TRUE
+                  blend_x blend_y
+                  endingx endingy)
     (gimp-layer-scale vignette (* owidth avig) (* oheight avig) 1)
-    (plug-in-spread 1 img vignette 50 50)
+    ; (plug-in-spread 1 img vignette 50 50)
     (if (= adv TRUE) 
         ( begin 
            (set! hvignette (car (gimp-layer-copy vignette 0)))
@@ -427,8 +431,9 @@
     ;swap foreground and background colors then
     ;apply a radial blend from center to farthest side of layer
     (gimp-context-swap-colors)
-    (gimp-edit-blend overexpo 2 0 2 100 0 REPEAT-NONE FALSE FALSE 0 0 TRUE blend_x blend_y endingx endingy)
-    (plug-in-spread 1 img overexpo 50 50)
+    ; GIMP-3
+    ; (gimp-edit-blend overexpo 2 0 2 100 0 REPEAT-NONE FALSE FALSE 0 0 TRUE blend_x blend_y endingx endingy)
+    ; (plug-in-spread 1 img overexpo 50 50)
     
     ;adding the black vignette
     ;selecting a feathered circle, invert selection and fill up with black
@@ -457,17 +462,21 @@
            (gimp-selection-none img)
            
            ;add grain and blur it
-           (plug-in-hsv-noise 1 img grain-layer 2 0 0 100)
-           (plug-in-gauss 1 img grain-layer 0.5 0.5 1)
+           ; GIMP-3
+           ; (plug-in-hsv-noise 1 imgg grain-layer 2 0 0 100)
+           (gimp-drawable-merge-new-filter grain-layer "gegl:noise-hsv" 0 LAYER-MODE-REPLACE 1.0
+                                    "saturation-distance" 0 "value-distance" 0.04)
+
+           ; (plug-in-gauss 1 img grain-layer 0.5 0.5 1)
            (gimp-layer-add-mask grain-layer grain-layer-mask)
            
            ;select the original image, copy and paste it as a layer mask into the grain layer
            (gimp-selection-all img)
            (gimp-edit-copy-visible img)
-           (gimp-floating-sel-anchor (car (gimp-edit-paste grain-layer-mask TRUE)))
+           ; (gimp-floating-sel-anchor (car (gimp-edit-paste grain-layer-mask TRUE)))
            
            ;set color curves of layer mask, so that only gray areas become grainy
-           (gimp-curves-spline grain-layer-mask  HISTOGRAM-VALUE  6 (splineValue))
+           (gimp-drawable-curves-spline grain-layer-mask  HISTOGRAM-VALUE #(0 0 128 (inexact->exact grain) 255 0))
            )
         )
     
@@ -534,14 +543,17 @@
                              adv is_black
                              centerx centery aradius)
   (gimp-message (string-append "Pattern: " pattern))
-  (let* ((filelist (cadr (file-glob pattern 1))))
+  (let* ((filelist (car (file-glob #:pattern pattern
+                                    #:filename-encoding TRUE))))
     (while (not (null? filelist))
            (let* ((filename (car filelist))
                   (fileparts (strbreakup filename "."))
                   (img (car (gimp-file-load RUN-NONINTERACTIVE filename filename)))
-                  (adraw (car (gimp-image-get-active-drawable img)))
+                  (adraw (vector-ref (car (gimp-image-get-selected-drawables img)) 0))
                   )
              (gimp-message (string-append "Filename: " filename))
+             (display "img: ")(display img)(newline)
+             (display "adraw: ")(display adraw)(newline)
 
              (gimp-message "Calling elsamuko-lomo")
              (elsamuko-lomo img adraw avig asat acon
@@ -552,7 +564,7 @@
                              centerx centery aradius)
 
              (gimp-image-merge-visible-layers img EXPAND-AS-NECESSARY)
-             (set! adraw (car (gimp-image-get-active-drawable img)))
+             (set! adraw (car (gimp-image-get-selected-drawables img)))
 
              (gimp-message "Saving")
              (gimp-file-save RUN-NONINTERACTIVE img adraw filename filename)
@@ -574,7 +586,7 @@ Latest version can be downloaded from http://registry.gimp.org/node/7870"
                     SF-IMAGE       "Input image"           0
                     SF-DRAWABLE    "Input drawable"        0
                     SF-ADJUSTMENT _"Vignetting Softness"   '(1.5 1 2 0.1 0.5 1 0)
-                    SF-ADJUSTMENT _"Saturation"            '(10 -40  40  1 5 1 0)
+                    SF-ADJUSTMENT _"Saturation"            '(0.1  0  0.4 1 5 1 0)
                     SF-ADJUSTMENT _"Contrast"              '(0.1  0  0.4 1 5 1 0)
                     SF-ADJUSTMENT _"Sharpness"             '(0.8 0 2 0.1 0.2 1 0)
                     SF-ADJUSTMENT _"Wide Angle Distortion" '(0 0 13 0.1 0.5 1 0)

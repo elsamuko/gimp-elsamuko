@@ -24,11 +24,11 @@
 
 (define (elsamuko-naturalize aimg adraw)
   (let* ((img (car (gimp-item-get-image adraw)))
-         (owidth (car (gimp-image-width img)))
-         (oheight (car (gimp-image-height img)))
+         (owidth (car (gimp-image-get-width img)))
+         (oheight (car (gimp-image-get-height img)))
          (desatlayer (car (gimp-layer-copy adraw FALSE)))
          (tmplayer (car (gimp-layer-copy adraw FALSE)))
-         (desatlayermask (car (gimp-layer-create-mask desatlayer ADD-WHITE-MASK)))
+         (desatlayermask (car (gimp-layer-create-mask desatlayer ADD-MASK-WHITE)))
          (floatingsel 0))
     
 
