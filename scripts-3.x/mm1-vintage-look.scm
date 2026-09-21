@@ -27,6 +27,12 @@
 ;
 ;
 
+; Depending on the GIMP version and how the script is invoked (menu, PDB, batch), toggles
+; and PDB booleans arrive either as numbers (1/0, TRUE/FALSE) or as Scheme booleans (#t/#f).
+; (= x TRUE) throws "=: argument 1 must be: number" for the latter, so use this instead.
+(define (mm1-vintage-true? value)
+  (and value (not (equal? value 0))))
+
 (define (mm1-vintage-look img
                           drw
                           VarCyan
@@ -44,14 +50,14 @@
          )
     
     ;Begin
-    (if (= (car (gimp-drawable-is-gray drw )) TRUE)
+    (if (mm1-vintage-true? (car (gimp-drawable-is-gray drw)))
         (gimp-image-convert-rgb img)
         )
     (gimp-context-push)
     (gimp-image-undo-group-start img)
     
     ;Bleach Bypass
-    (if(= Overlay TRUE)
+    (if (mm1-vintage-true? Overlay)
        (begin
          (gimp-image-insert-layer img overlay-layer 0 -1)
          (gimp-drawable-desaturate overlay-layer DESATURATE-LUMA)

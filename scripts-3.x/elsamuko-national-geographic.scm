@@ -24,9 +24,25 @@
 ;               Thanks to Martin Egger <martin.egger@gmx.net> for the shadow revovery and the sharpen script
 ;
 ; This is the batch version of the NG script, run it with
-; gimp -i -b '(elsamuko-national-geographic-batch "picture.jpg" 60 1 60 25 0.4 1 0)' -b '(gimp-quit 0)'
+; gimp-console -i --batch-interpreter=plug-in-script-fu-eval -b '(elsamuko-national-geographic-batch "picture.jpg" 60 1 60 25 0.4 1 0)' --quit
 ; or for more than one picture
-; gimp -i -b '(elsamuko-national-geographic-batch "*.jpg" 60 1 60 25 0.4 1 0)' -b '(gimp-quit 0)'
+; gimp-console -i --batch-interpreter=plug-in-script-fu-eval -b '(elsamuko-national-geographic-batch "*.jpg" 60 1 60 25 0.4 1 0)' --quit
+;
+; GIMP 3.x needs the --batch-interpreter option, otherwise GIMP only complains "No batch
+; interpreter specified" and does not run the -b command (and may hang instead of quitting).
+; Plain "gimp" instead of "gimp-console" works as well, the latter is just the headless build.
+; The script must be installed in the GIMP scripts folder, so that GIMP finds the batch function.
+; The pattern is case sensitive, use e.g. "*.JPG" for upper case file extensions.
+; Attention: The pictures are overwritten with the result, so work on copies!
+;
+; Arguments: pattern shadow-opacity sharpness screen-opacity overlay-opacity local-contrast
+;            screen-layer-mask (1 = on, 0 = off) tint (0 = neutral, 1 = red, 2 = blue)
+
+; Depending on the GIMP version and how the script is invoked (menu, PDB, batch), toggles
+; and PDB booleans arrive either as numbers (1/0, TRUE/FALSE) or as Scheme booleans (#t/#f).
+; (= x TRUE) throws "=: argument 1 must be: number" for the latter, so use this instead.
+(define (elsamuko-ng-true? value)
+  (and value (not (equal? value 0))))
 
 (define (elsamuko-national-geographic aimg adraw shadowopacity
                                       sharpness screenopacity
@@ -54,7 +70,7 @@
     ;init
     (gimp-context-push)
     (gimp-image-undo-group-start img)
-    (if (= (car (gimp-drawable-is-gray adraw )) TRUE)
+    (if (elsamuko-ng-true? (car (gimp-drawable-is-gray adraw)))
         (gimp-image-convert-rgb img)
         )
     ;(gimp-context-set-foreground '(0 0 0))
@@ -152,7 +168,7 @@
     (gimp-layer-set-opacity overlaylayer2 overlayopacity)
     
     ;layermask for the screen layer
-    (if(= screenmask TRUE)
+    (if (elsamuko-ng-true? screenmask)
        (begin
          (set! floatingsel (car (gimp-layer-create-mask screenlayer ADD-MASK-COPY)))
          (gimp-layer-add-mask screenlayer floatingsel)
