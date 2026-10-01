@@ -66,6 +66,12 @@
 ; 13 - sepia
 ;
 
+(define (log-message message)
+  (display (string-append
+            "LOG: "
+            message
+            "\n")))
+
 (define (elsamuko-lomo aimg adraw avig asat acon
                        sharp wide_angle gauss_blur
                        motion_blur grain c41 
@@ -194,6 +200,7 @@
         (plug-in-mblur 1 img draw 2 motion_blur 0 blend_x blend_y)
         )
     
+    (log-message "Setting colors")
     ;add c41-effect
     ;old red from djinn (http://registry.gimp.org/node/4683)
     (if(= c41 1)(begin
@@ -483,6 +490,7 @@
     ;sharpness layer
     (if(> sharp 0)
        (begin
+         (log-message "Adding sharpness layer")
          (if (> grain 0)(gimp-item-set-visible grain-layer FALSE))
          
          (gimp-edit-copy-visible aimg)
@@ -542,7 +550,8 @@
                              invertA invertB
                              adv is_black
                              centerx centery aradius)
-  (gimp-message (string-append "Pattern: " pattern))
+  (log-message (string-append "Pattern: " pattern))
+
   (let* ((filelist (car (file-glob #:pattern pattern
                                     #:filename-encoding TRUE))))
     (while (not (null? filelist))
@@ -551,11 +560,11 @@
                   (img (car (gimp-file-load RUN-NONINTERACTIVE filename filename)))
                   (adraw (vector-ref (car (gimp-image-get-selected-drawables img)) 0))
                   )
-             (gimp-message (string-append "Filename: " filename))
+             (log-message (string-append "Filename: " filename))
              (display "img: ")(display img)(newline)
              (display "adraw: ")(display adraw)(newline)
 
-             (gimp-message "Calling elsamuko-lomo")
+             (log-message "Calling elsamuko-lomo")
              (elsamuko-lomo img adraw avig asat acon
                              sharp wide_angle gauss_blur
                              motion_blur grain c41 
@@ -563,10 +572,11 @@
                              adv is_black
                              centerx centery aradius)
 
+            (log-message "Saving image")
              (gimp-image-merge-visible-layers img EXPAND-AS-NECESSARY)
              (set! adraw (car (gimp-image-get-selected-drawables img)))
 
-             (gimp-message "Saving")
+             (log-message "Saving")
              (gimp-file-save RUN-NONINTERACTIVE img adraw filename filename)
              (gimp-image-delete img)
              (set! filelist (cdr filelist))
