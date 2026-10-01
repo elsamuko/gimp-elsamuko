@@ -210,43 +210,43 @@
     ;add c41-effect
     ;old red from djinn (http://registry.gimp.org/node/4683)
     (if(= c41 1)(begin
-                  (gimp-curves-spline draw  HISTOGRAM-VALUE 8 #(0 0 68 64 190 219 255 255))
-                  (gimp-curves-spline draw  HISTOGRAM-RED   8 #(0 0 39 93 193 147 255 255))
-                  (gimp-curves-spline draw  HISTOGRAM-GREEN 6 #(0 0 68 70 255 207))
-                  (gimp-curves-spline draw  HISTOGRAM-BLUE  6 #(0 0 94 94 255 199))
+                  (gimp-drawable-curves-spline draw  HISTOGRAM-VALUE #(0 0 68 64 190 219 255 255))
+                  (gimp-drawable-curves-spline draw  HISTOGRAM-RED   #(0 0 39 93 193 147 255 255))
+                  (gimp-drawable-curves-spline draw  HISTOGRAM-GREEN #(0 0 68 70 255 207))
+                  (gimp-drawable-curves-spline draw  HISTOGRAM-BLUE  #(0 0 94 94 255 199))
                   )
        )
     
     ;xpro green from lilahpops (http://www.lilahpops.com/cross-processing-with-the-gimp/)
     (if(= c41 2)(begin
-                  (gimp-curves-spline draw  HISTOGRAM-RED  10 #(0 0 80 84 149 192 191 248 255 255))
-                  (gimp-curves-spline draw  HISTOGRAM-GREEN 8 #(0 0 70 81 159 220 255 255))
-                  (gimp-curves-spline draw  HISTOGRAM-BLUE  4 #(0 27 255 213))
+                  (gimp-drawable-curves-spline draw  HISTOGRAM-RED   #(0 0 80 84 149 192 191 248 255 255))
+                  (gimp-drawable-curves-spline draw  HISTOGRAM-GREEN #(0 0 70 81 159 220 255 255))
+                  (gimp-drawable-curves-spline draw  HISTOGRAM-BLUE  #(0 27 255 213))
                   )
        )
     
     ;blue
     (if(= c41 3)(begin
-                  (gimp-curves-spline draw  HISTOGRAM-RED   4 #(0 62 255 229))
-                  (gimp-curves-spline draw  HISTOGRAM-GREEN 8 #(0 0 69 29 193 240 255 255))
-                  (gimp-curves-spline draw  HISTOGRAM-BLUE  8 #(0 27 82 44 202 241 255 255))
+                  (gimp-drawable-curves-spline draw  HISTOGRAM-RED   #(0 62 255 229))
+                  (gimp-drawable-curves-spline draw  HISTOGRAM-GREEN #(0 0 69 29 193 240 255 255))
+                  (gimp-drawable-curves-spline draw  HISTOGRAM-BLUE  #(0 27 82 44 202 241 255 255))
                   )
        )
     
     ;intense red
     (if(= c41 4)(begin
-                  (gimp-curves-spline draw  HISTOGRAM-RED   6 #(0 0 90 150 240 255))
-                  (gimp-curves-spline draw  HISTOGRAM-GREEN 6 #(0 0 136 107 240 255))
-                  (gimp-curves-spline draw  HISTOGRAM-BLUE  6 #(0 0 136 107 255 246))
+                  (gimp-drawable-curves-spline draw  HISTOGRAM-RED   #(0 0 90 150 240 255))
+                  (gimp-drawable-curves-spline draw  HISTOGRAM-GREEN #(0 0 136 107 240 255))
+                  (gimp-drawable-curves-spline draw  HISTOGRAM-BLUE  #(0 0 136 107 255 246))
                   )
        )
     
     ;movie (from http://tutorials.lombergar.com/achieve_the_indie_movie_look.html)
     (if(= c41 5)(begin
-                  (gimp-curves-spline draw  HISTOGRAM-VALUE 4 #(40 0 255 255))
-                  (gimp-curves-spline draw  HISTOGRAM-RED   6 #(0  0 127 157 255 255))
-                  (gimp-curves-spline draw  HISTOGRAM-GREEN 4 #(0  8 255 255))
-                  (gimp-curves-spline draw  HISTOGRAM-BLUE  6 #(0  0 127 106 255 245))
+                  (gimp-drawable-curves-spline draw  HISTOGRAM-VALUE #(40 0 255 255))
+                  (gimp-drawable-curves-spline draw  HISTOGRAM-RED   #(0  0 127 157 255 255))
+                  (gimp-drawable-curves-spline draw  HISTOGRAM-GREEN #(0  8 255 255))
+                  (gimp-drawable-curves-spline draw  HISTOGRAM-BLUE  #(0  0 127 106 255 245))
                   )
        )
     
@@ -314,10 +314,10 @@
     
     ;light blue
     (if(= c41 8)(begin
-                  (gimp-curves-spline draw  HISTOGRAM-RED   6 #(0 0 154 141 232 255))
-                  (gimp-curves-spline draw  HISTOGRAM-GREEN 8 #(0 0 65 48 202 215 255 255))
-                  (gimp-curves-spline draw  HISTOGRAM-GREEN 4 #(0 21 255 255))
-                  (gimp-curves-spline draw  HISTOGRAM-BLUE  8 #(0 0 68 89 162 206 234 255))
+                  (gimp-drawable-curves-spline draw  HISTOGRAM-RED   #(0 0 154 141 232 255))
+                  (gimp-drawable-curves-spline draw  HISTOGRAM-GREEN #(0 0 65 48 202 215 255 255))
+                  (gimp-drawable-curves-spline draw  HISTOGRAM-GREEN #(0 21 255 255))
+                  (gimp-drawable-curves-spline draw  HISTOGRAM-BLUE  #(0 0 68 89 162 206 234 255))
                   (gimp-levels draw HISTOGRAM-VALUE
                                25 255 ;input
                                1.25   ;gamma
@@ -327,7 +327,7 @@
     
     ;pink shadow
     (if(= c41 9)(begin
-                  (gimp-curves-spline draw  HISTOGRAM-GREEN 4 #(30 0 255 255))
+                  (gimp-drawable-curves-spline draw  HISTOGRAM-GREEN #(30 0 255 255))
                   )
        )
     
@@ -350,18 +350,18 @@
                    (gimp-context-set-background '(0 0 255))
                    (gimp-drawable-fill blue-layer BACKGROUND-FILL)
                    
-                   (gimp-curves-spline draw HISTOGRAM-RED   6 #(0 0 127 190 255 255))
-                   (gimp-curves-spline draw HISTOGRAM-GREEN 6 #(0 0 127  62 240 255))
-                   (gimp-curves-spline draw HISTOGRAM-BLUE  4 #(0 0 255 0))
+                   (gimp-drawable-curves-spline draw HISTOGRAM-RED   #(0 0 127 190 255 255))
+                   (gimp-drawable-curves-spline draw HISTOGRAM-GREEN #(0 0 127  62 240 255))
+                   (gimp-drawable-curves-spline draw HISTOGRAM-BLUE  #(0 0 255 0))
                    )
        )
     
     ;retro bw
     (if(= c41 11)(begin
                    (gimp-desaturate-full draw DESATURATE-LUMINOSITY)
-                   ;(gimp-curves-spline draw HISTOGRAM-RED   4 #(0 15 255 255))
-                   (gimp-curves-spline draw HISTOGRAM-BLUE  4 #(0 0 255 230))
-                   (gimp-curves-spline draw HISTOGRAM-VALUE 8 #(0 0 63 52 191 202 255 255))
+                   ;(gimp-drawable-curves-spline draw HISTOGRAM-RED   #(0 15 255 255))
+                   (gimp-drawable-curves-spline draw HISTOGRAM-BLUE  #(0 0 255 230))
+                   (gimp-drawable-curves-spline draw HISTOGRAM-VALUE #(0 0 63 52 191 202 255 255))
                    )
        )
     
@@ -489,7 +489,7 @@
            ; (gimp-floating-sel-anchor (car (gimp-edit-paste grain-layer-mask TRUE)))
            
            ;set color curves of layer mask, so that only gray areas become grainy
-           (gimp-drawable-curves-spline grain-layer-mask  HISTOGRAM-VALUE #(0 0 128 (inexact->exact grain) 255 0))
+           (gimp-drawable-curves-spline grain-layer-mask  HISTOGRAM-VALUE (vector 0 0 128 grain 255 0))
            )
         )
     
