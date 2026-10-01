@@ -192,12 +192,18 @@
     
     ;gauss blur as general focusing error
     (if (> gauss_blur 0)
-        (plug-in-gauss TRUE aimg draw gauss_blur gauss_blur TRUE)
+        ; (plug-in-gauss TRUE aimg draw gauss_blur gauss_blur TRUE)
+        (gimp-drawable-merge-new-filter draw "gegl:gaussian-blur" 0 LAYER-MODE-REPLACE 1.0
+                                        "std-dev-x" gauss_blur
+                                        "std-dev-y" gauss_blur)
         )
     
     ;motion blur as corner fuzziness
     (if (> motion_blur 0)
-        (plug-in-mblur 1 img draw 2 motion_blur 0 blend_x blend_y)
+        ;(plug-in-mblur 1 img draw 2 motion_blur 0 blend_x blend_y)
+        (gimp-drawable-merge-new-filter draw "gegl:motion-blur-linear" 0 LAYER-MODE-REPLACE 1.0
+                                        "length" motion_blur
+                                        "angle" 0.0)
         )
     
     (log-message "Setting colors")
