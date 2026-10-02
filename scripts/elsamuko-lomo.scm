@@ -1,3 +1,5 @@
+#!/usr/bin/env gimp-script-fu-interpreter-3.0
+
 ; The GIMP -- an image manipulation program
 ; Copyright (C) 1995 Spencer Kimball and Peter Mattis
 ; 
@@ -66,12 +68,6 @@
 ; 13 - sepia
 ;
 
-(define (log-message message)
-  (display (string-append
-            "LOG: "
-            message
-            "\n")))
-
 (define (elsamuko-lomo aimg adraw avig asat acon
                        sharp wide_angle gauss_blur
                        motion_blur grain c41 
@@ -79,7 +75,7 @@
                        adv is_black
                        centerx centery aradius)
   (let* ( (img (car (gimp-item-get-image adraw)))
-          (draw (car (gimp-layer-copy adraw FALSE))) 
+          (draw (car (gimp-layer-copy adraw)))
           (owidth (car (gimp-image-get-width img)))
           (oheight (car (gimp-image-get-height img)))
           (halfwidth (/ owidth 2))
@@ -117,39 +113,39 @@
           (y_black (- (- halfheight (* multi (/ amiddle 2))) (* oheight (/ centery 100))))
           (vignette (car (gimp-layer-new img
                                          "Vignette"
-                                         owidth 
+                                         owidth
                                          oheight
                                          1
                                          100 
-                                         LAYER-MODE-OVERLAY)))
+                                         LAYER-MODE-OVERLAY-LEGACY)))
           (hvignette (car (gimp-layer-new img
-                                          "Vignette" 
-                                          owidth 
+                                          "Vignette"
+                                          owidth
                                           oheight
                                           1
-                                          100 
-                                          LAYER-MODE-OVERLAY)))
+                                          100
+                                          LAYER-MODE-OVERLAY-LEGACY)))
           (overexpo (car (gimp-layer-new img
                                          "Over Exposure" 
-                                         owidth 
+                                         owidth
                                          oheight
                                          1
                                          80 
-                                         LAYER-MODE-OVERLAY)))
+                                         LAYER-MODE-OVERLAY-LEGACY)))
           (black_vignette (car (gimp-layer-new img
                                                "Black Vignette" 
-                                               owidth 
+                                               owidth
                                                oheight
                                                1
                                                100 
-                                               LAYER-MODE-NORMAL)))
+                                               LAYER-MODE-NORMAL-LEGACY)))
           (grain-layer (car (gimp-layer-new img
                                             "Grain" 
-                                            owidth 
+                                            owidth
                                             oheight
                                             1
                                             100 
-                                            LAYER-MODE-OVERLAY)))
+                                            LAYER-MODE-OVERLAY-LEGACY)))
           (grain-layer-mask (car (gimp-layer-create-mask grain-layer ADD-MASK-WHITE)))
           )
     
@@ -159,12 +155,17 @@
     
     (define (set-pt a index x y)
       (begin
-        (aset a (* index 2) x)
-        (aset a (+ (* index 2) 1) y)
+        (vector-set! a (* index 2) (/ x 255.0))
+        (vector-set! a (+ (* index 2) 1) (/ y 255.0))
         )
       )
     (define (splineValue)
-      #(0 0 128 grain 255 0)
+      (let* ((a (make-vector 6 0.0)))
+        (set-pt a 0 0 0)
+        (set-pt a 1 128 grain)
+        (set-pt a 2 255 0)
+        a
+        )
       )
     
     ;(gimp-message (number->string (car (gimp-drawable-is-gray adraw ))))
@@ -176,232 +177,223 @@
     (gimp-image-undo-group-start img)
     (gimp-context-set-foreground '(0 0 0))
     (gimp-context-set-background '(255 255 255))
-    (gimp-image-insert-layer img draw 0 -1)
+    (gimp-image-insert-layer img draw -1 -1)
     (gimp-item-set-name draw "Process Copy")
     
     ; adjust contrast, saturation 
-    (gimp-drawable-brightness-contrast draw 0 acon)
-    (gimp-drawable-hue-saturation draw HUE-RANGE-ALL 0 0 asat)
+    (gimp-drawable-brightness-contrast draw 0 (/ acon 127.0))
+    (gimp-drawable-hue-saturation draw HUE-RANGE-ALL 0 0 asat 0)
     
     ;wide angle lens distortion
     (if (> wide_angle 0) 
-        ; (plug-in-lens-distortion 1 img draw 0 0 wide_angle 0 9 0)
-        (gimp-drawable-merge-new-filter draw "gegl:lens-distortion" 0 LAYER-MODE-REPLACE 1.0
-                        "main" wide_angle)
+        (gimp-drawable-merge-new-filter draw "gegl:lens-distortion" "" LAYER-MODE-REPLACE 1.0 "x-shift" 0 "y-shift" 0 "main" wide_angle "edge" 0 "zoom" 9 "brighten" 0 "background" (car (gimp-context-get-background)))
         )
     
     ;gauss blur as general focusing error
     (if (> gauss_blur 0)
-        ; (plug-in-gauss TRUE aimg draw gauss_blur gauss_blur TRUE)
-        (gimp-drawable-merge-new-filter draw "gegl:gaussian-blur" 0 LAYER-MODE-REPLACE 1.0
-                                        "std-dev-x" gauss_blur
-                                        "std-dev-y" gauss_blur)
+        (gimp-drawable-merge-new-filter draw "gegl:gaussian-blur" "" LAYER-MODE-REPLACE 1.0 "std-dev-x" (* gauss_blur 0.32) "std-dev-y" (* gauss_blur 0.32) "abyss-policy" "clamp")
         )
     
     ;motion blur as corner fuzziness
     (if (> motion_blur 0)
-        ;(plug-in-mblur 1 img draw 2 motion_blur 0 blend_x blend_y)
-        (gimp-drawable-merge-new-filter draw "gegl:motion-blur-linear" 0 LAYER-MODE-REPLACE 1.0
-                                        "length" motion_blur
-                                        "angle" 0.0)
+        (gimp-drawable-merge-new-filter draw "gegl:motion-blur-zoom" "" LAYER-MODE-REPLACE 1.0 "factor" (/ motion_blur 256.0) "center-x" (/ blend_x owidth) "center-y" (/ blend_y oheight))
         )
     
-    (log-message "Setting colors")
     ;add c41-effect
     ;old red from djinn (http://registry.gimp.org/node/4683)
     (if(= c41 1)(begin
-                  (gimp-drawable-curves-spline draw  HISTOGRAM-VALUE #(0 0 68 64 190 219 255 255))
-                  (gimp-drawable-curves-spline draw  HISTOGRAM-RED   #(0 0 39 93 193 147 255 255))
-                  (gimp-drawable-curves-spline draw  HISTOGRAM-GREEN #(0 0 68 70 255 207))
-                  (gimp-drawable-curves-spline draw  HISTOGRAM-BLUE  #(0 0 94 94 255 199))
+                  (gimp-drawable-curves-spline draw  HISTOGRAM-VALUE  #(0 0 0.26666666666666666 0.25098039215686274 0.74509803921568629 0.85882352941176465 1 1))
+                  (gimp-drawable-curves-spline draw  HISTOGRAM-RED    #(0 0 0.15294117647058825 0.36470588235294116 0.75686274509803919 0.57647058823529407 1 1))
+                  (gimp-drawable-curves-spline draw  HISTOGRAM-GREEN  #(0 0 0.26666666666666666 0.27450980392156865 1 0.81176470588235294))
+                  (gimp-drawable-curves-spline draw  HISTOGRAM-BLUE   #(0 0 0.36862745098039218 0.36862745098039218 1 0.7803921568627451))
                   )
        )
     
     ;xpro green from lilahpops (http://www.lilahpops.com/cross-processing-with-the-gimp/)
     (if(= c41 2)(begin
-                  (gimp-drawable-curves-spline draw  HISTOGRAM-RED   #(0 0 80 84 149 192 191 248 255 255))
-                  (gimp-drawable-curves-spline draw  HISTOGRAM-GREEN #(0 0 70 81 159 220 255 255))
-                  (gimp-drawable-curves-spline draw  HISTOGRAM-BLUE  #(0 27 255 213))
+                  (gimp-drawable-curves-spline draw  HISTOGRAM-RED   #(0 0 0.31372549019607843 0.32941176470588235 0.58431372549019611 0.75294117647058822 0.74901960784313726 0.97254901960784312 1 1))
+                  (gimp-drawable-curves-spline draw  HISTOGRAM-GREEN  #(0 0 0.27450980392156865 0.31764705882352939 0.62352941176470589 0.86274509803921573 1 1))
+                  (gimp-drawable-curves-spline draw  HISTOGRAM-BLUE   #(0 0.10588235294117647 1 0.83529411764705885))
                   )
        )
     
     ;blue
     (if(= c41 3)(begin
-                  (gimp-drawable-curves-spline draw  HISTOGRAM-RED   #(0 62 255 229))
-                  (gimp-drawable-curves-spline draw  HISTOGRAM-GREEN #(0 0 69 29 193 240 255 255))
-                  (gimp-drawable-curves-spline draw  HISTOGRAM-BLUE  #(0 27 82 44 202 241 255 255))
+                  (gimp-drawable-curves-spline draw  HISTOGRAM-RED    #(0 0.24313725490196078 1 0.89803921568627454))
+                  (gimp-drawable-curves-spline draw  HISTOGRAM-GREEN  #(0 0 0.27058823529411763 0.11372549019607843 0.75686274509803919 0.94117647058823528 1 1))
+                  (gimp-drawable-curves-spline draw  HISTOGRAM-BLUE   #(0 0.10588235294117647 0.32156862745098042 0.17254901960784313 0.792156862745098 0.94509803921568625 1 1))
                   )
        )
     
     ;intense red
     (if(= c41 4)(begin
-                  (gimp-drawable-curves-spline draw  HISTOGRAM-RED   #(0 0 90 150 240 255))
-                  (gimp-drawable-curves-spline draw  HISTOGRAM-GREEN #(0 0 136 107 240 255))
-                  (gimp-drawable-curves-spline draw  HISTOGRAM-BLUE  #(0 0 136 107 255 246))
+                  (gimp-drawable-curves-spline draw  HISTOGRAM-RED    #(0 0 0.35294117647058826 0.58823529411764708 0.94117647058823528 1))
+                  (gimp-drawable-curves-spline draw  HISTOGRAM-GREEN  #(0 0 0.53333333333333333 0.41960784313725491 0.94117647058823528 1))
+                  (gimp-drawable-curves-spline draw  HISTOGRAM-BLUE   #(0 0 0.53333333333333333 0.41960784313725491 1 0.96470588235294119))
                   )
        )
     
     ;movie (from http://tutorials.lombergar.com/achieve_the_indie_movie_look.html)
     (if(= c41 5)(begin
-                  (gimp-drawable-curves-spline draw  HISTOGRAM-VALUE #(40 0 255 255))
-                  (gimp-drawable-curves-spline draw  HISTOGRAM-RED   #(0  0 127 157 255 255))
-                  (gimp-drawable-curves-spline draw  HISTOGRAM-GREEN #(0  8 255 255))
-                  (gimp-drawable-curves-spline draw  HISTOGRAM-BLUE  #(0  0 127 106 255 245))
+                  (gimp-drawable-curves-spline draw  HISTOGRAM-VALUE  #(0.15686274509803921 0 1 1))
+                  (gimp-drawable-curves-spline draw  HISTOGRAM-RED    #(0  0 0.49803921568627452 0.61568627450980395 1 1))
+                  (gimp-drawable-curves-spline draw  HISTOGRAM-GREEN  #(0  0.031372549019607843 1 1))
+                  (gimp-drawable-curves-spline draw  HISTOGRAM-BLUE   #(0  0 0.49803921568627452 0.41568627450980394 1 0.96078431372549022))
                   )
        )
     
     ;vintage-look script from mm1 (http://registry.gimp.org/node/1348)
     (if(= c41 6)(begin
                   ;Yellow Layer
-                  (set! yellow-layer (car (gimp-layer-new img "Yellow" owidth oheight RGB 100  MULTIPLY-MODE)))	
-                  (gimp-image-insert-layer img yellow-layer 0 -1)
+                  (set! yellow-layer (car (gimp-layer-new img "Yellow" owidth oheight RGB-IMAGE 100  LAYER-MODE-MULTIPLY-LEGACY)))
+                  (gimp-image-insert-layer img yellow-layer -1 -1)
                   (gimp-context-set-background '(251 242 163))
-                  (gimp-drawable-fill yellow-layer BACKGROUND-FILL)
+                  (gimp-drawable-fill yellow-layer FILL-BACKGROUND)
                   (gimp-layer-set-opacity yellow-layer 59)
                   
                   ;Magenta Layer
-                  (set! magenta-layer (car (gimp-layer-new img "Magenta" owidth oheight RGB 100  SCREEN-MODE)))	
-                  (gimp-image-insert-layer img magenta-layer 0 -1)
+                  (set! magenta-layer (car (gimp-layer-new img "Magenta" owidth oheight RGB-IMAGE 100  LAYER-MODE-SCREEN-LEGACY)))
+                  (gimp-image-insert-layer img magenta-layer -1 -1)
                   (gimp-context-set-background '(232 101 179))
-                  (gimp-drawable-fill magenta-layer BACKGROUND-FILL)
+                  (gimp-drawable-fill magenta-layer FILL-BACKGROUND)
                   (gimp-layer-set-opacity magenta-layer 20)
                   
                   ;Cyan Layer 
-                  (set! cyan-layer (car (gimp-layer-new img "Cyan" owidth oheight RGB 100  SCREEN-MODE)))	
-                  (gimp-image-insert-layer img cyan-layer 0 -1)
+                  (set! cyan-layer (car (gimp-layer-new img "Cyan" owidth oheight RGB-IMAGE 100  LAYER-MODE-SCREEN-LEGACY)))
+                  (gimp-image-insert-layer img cyan-layer -1 -1)
                   (gimp-context-set-background '(9 73 233))
-                  (gimp-drawable-fill cyan-layer BACKGROUND-FILL)
+                  (gimp-drawable-fill cyan-layer FILL-BACKGROUND)
                   (gimp-layer-set-opacity cyan-layer 17)
                   )
        )
     
     ;LAB from Martin Evening (http://www.photoshopforphotographers.com/pscs2/download/movie-06.pdf)
     (if(= c41 7)(begin
-                  (set! drawA  (car (gimp-layer-copy draw FALSE)))
-                  (set! drawB (car (gimp-layer-copy draw FALSE)))
-                  (gimp-image-insert-layer img drawA 0 -1)
-                  (gimp-image-insert-layer img drawB 0 -1)
+                  (set! drawA  (car (gimp-layer-copy draw)))
+                  (set! drawB (car (gimp-layer-copy draw)))
+                  (gimp-image-insert-layer img drawA -1 -1)
+                  (gimp-image-insert-layer img drawB -1 -1)
                   
                   (gimp-item-set-name drawA "LAB-A")
                   (gimp-item-set-name drawB "LAB-B")
                   
                   ;decompose image to LAB and stretch A and B
-                  (set! imgLAB (car (plug-in-decompose 1 img drawA "LAB" TRUE)))
+                  (set! imgLAB (car (plug-in-decompose RUN-NONINTERACTIVE img (vector drawA) "lab" TRUE FALSE)))
                   (set! layersLAB (gimp-image-get-layers imgLAB))
-                  (set! layerA (aref (cadr layersLAB) 1))
-                  (gimp-levels-stretch layerA)
-                  (plug-in-recompose 1 imgLAB layerA)
+                  (set! layerA (vector-ref (car layersLAB) 1))
+                  (gimp-drawable-levels-stretch layerA)
+                  (plug-in-recompose RUN-NONINTERACTIVE imgLAB (vector layerA))
                   
-                  (set! imgLAB (car (plug-in-decompose 1 img drawB "LAB" TRUE)))
+                  (set! imgLAB (car (plug-in-decompose RUN-NONINTERACTIVE img (vector drawB) "lab" TRUE FALSE)))
                   (set! layersLAB (gimp-image-get-layers imgLAB))
-                  (set! layerB (aref (cadr layersLAB) 2))
-                  (gimp-levels-stretch layerB)
-                  (plug-in-recompose 1 imgLAB layerB)
+                  (set! layerB (vector-ref (car layersLAB) 2))
+                  (gimp-drawable-levels-stretch layerB)
+                  (plug-in-recompose RUN-NONINTERACTIVE imgLAB (vector layerB))
                   
                   (gimp-image-delete imgLAB)
                   
                   ;set mode to color mode
-                  (gimp-layer-set-mode drawA COLOR-MODE)
-                  (gimp-layer-set-mode drawB COLOR-MODE)
+                  (gimp-layer-set-mode drawA LAYER-MODE-HSL-COLOR-LEGACY)
+                  (gimp-layer-set-mode drawB LAYER-MODE-HSL-COLOR-LEGACY)
                   (gimp-layer-set-opacity drawA 40)
                   (gimp-layer-set-opacity drawB 40)
                   
                   ;blur
-                  (plug-in-gauss 1 img drawA 2.5 2.5 1)
-                  (plug-in-gauss 1 img drawB 2.5 2.5 1)
+                  (gimp-drawable-merge-new-filter drawA "gegl:gaussian-blur" "" LAYER-MODE-REPLACE 1.0 "std-dev-x" (* 2.5 0.32) "std-dev-y" (* 2.5 0.32) "abyss-policy" "clamp")
+                  (gimp-drawable-merge-new-filter drawB "gegl:gaussian-blur" "" LAYER-MODE-REPLACE 1.0 "std-dev-x" (* 2.5 0.32) "std-dev-y" (* 2.5 0.32) "abyss-policy" "clamp")
                   )
        )
     
     ;light blue
     (if(= c41 8)(begin
-                  (gimp-drawable-curves-spline draw  HISTOGRAM-RED   #(0 0 154 141 232 255))
-                  (gimp-drawable-curves-spline draw  HISTOGRAM-GREEN #(0 0 65 48 202 215 255 255))
-                  (gimp-drawable-curves-spline draw  HISTOGRAM-GREEN #(0 21 255 255))
-                  (gimp-drawable-curves-spline draw  HISTOGRAM-BLUE  #(0 0 68 89 162 206 234 255))
-                  (gimp-levels draw HISTOGRAM-VALUE
-                               25 255 ;input
-                               1.25   ;gamma
-                               0 255) ;output
+                  (gimp-drawable-curves-spline draw  HISTOGRAM-RED    #(0 0 0.60392156862745094 0.55294117647058827 0.90980392156862744 1))
+                  (gimp-drawable-curves-spline draw  HISTOGRAM-GREEN  #(0 0 0.25490196078431371 0.18823529411764706 0.792156862745098 0.84313725490196079 1 1))
+                  (gimp-drawable-curves-spline draw  HISTOGRAM-GREEN  #(0 0.082352941176470587 1 1))
+                  (gimp-drawable-curves-spline draw  HISTOGRAM-BLUE   #(0 0 0.26666666666666666 0.34901960784313724 0.63529411764705879 0.80784313725490198 0.91764705882352937 1))
+                  (gimp-drawable-levels draw HISTOGRAM-VALUE
+                                        (/ 25 255.0) 1.0 TRUE ;input
+                                        1.25   ;gamma
+                                        0.0 1.0 TRUE) ;output
                   )
        )
     
     ;pink shadow
     (if(= c41 9)(begin
-                  (gimp-drawable-curves-spline draw  HISTOGRAM-GREEN #(30 0 255 255))
+                  (gimp-drawable-curves-spline draw  HISTOGRAM-GREEN  #(0.11764705882352941 0 1 1))
                   )
        )
     
     ;redscale
     (if(= c41 10)(begin
                    ;Blue Layer
-                   (set! blue-layer (car (gimp-layer-copy draw TRUE)))
-                   (gimp-image-insert-layer img blue-layer 0 -1)
+                   (set! blue-layer (car (gimp-layer-copy draw))) (gimp-layer-add-alpha blue-layer)
+                   (gimp-image-insert-layer img blue-layer -1 -1)
                    (gimp-item-set-name blue-layer "Blue Filter")
                    (gimp-layer-set-opacity blue-layer 40)
-                   (gimp-layer-set-mode blue-layer SCREEN-MODE)
-                   (plug-in-colors-channel-mixer 1 img blue-layer TRUE
-                                                 0 0 1 ;R
-                                                 0 0 0 ;G
-                                                 0 0 0 ;B
-                                                 )
-                   (set! blue-layer-mask (car (gimp-layer-create-mask blue-layer ADD-COPY-MASK)))
+                   (gimp-layer-set-mode blue-layer LAYER-MODE-SCREEN-LEGACY)
+                   (gimp-drawable-merge-new-filter blue-layer "gegl:mono-mixer" "" LAYER-MODE-REPLACE 1.0
+                                                   "red" 0 ;R
+                                                   "green" 0 ;G
+                                                   "blue" 1 ;B
+                                                   )
+                   (set! blue-layer-mask (car (gimp-layer-create-mask blue-layer ADD-MASK-COPY)))
                    (gimp-layer-add-mask blue-layer blue-layer-mask)
                    
                    (gimp-context-set-background '(0 0 255))
-                   (gimp-drawable-fill blue-layer BACKGROUND-FILL)
+                   (gimp-drawable-fill blue-layer FILL-BACKGROUND)
                    
-                   (gimp-drawable-curves-spline draw HISTOGRAM-RED   #(0 0 127 190 255 255))
-                   (gimp-drawable-curves-spline draw HISTOGRAM-GREEN #(0 0 127  62 240 255))
-                   (gimp-drawable-curves-spline draw HISTOGRAM-BLUE  #(0 0 255 0))
+                   (gimp-drawable-curves-spline draw HISTOGRAM-RED    #(0 0 0.49803921568627452 0.74509803921568629 1 1))
+                   (gimp-drawable-curves-spline draw HISTOGRAM-GREEN  #(0 0 0.49803921568627452  0.24313725490196078 0.94117647058823528 1))
+                   (gimp-drawable-curves-spline draw HISTOGRAM-BLUE   #(0 0 1 0))
                    )
        )
     
     ;retro bw
     (if(= c41 11)(begin
-                   (gimp-desaturate-full draw DESATURATE-LUMINOSITY)
-                   ;(gimp-drawable-curves-spline draw HISTOGRAM-RED   #(0 15 255 255))
-                   (gimp-drawable-curves-spline draw HISTOGRAM-BLUE  #(0 0 255 230))
-                   (gimp-drawable-curves-spline draw HISTOGRAM-VALUE #(0 0 63 52 191 202 255 255))
+                   (gimp-drawable-desaturate draw DESATURATE-LUMA)
+                   ;(gimp-curves-spline draw HISTOGRAM-RED   4 #(0 15 255 255))
+                   (gimp-drawable-curves-spline draw HISTOGRAM-BLUE   #(0 0 1 0.90196078431372551))
+                   (gimp-drawable-curves-spline draw HISTOGRAM-VALUE  #(0 0 0.24705882352941178 0.20392156862745098 0.74901960784313726 0.792156862745098 1 1))
                    )
        )
     
     ;paynes bw
     (if(= c41 12)(begin
-                   (gimp-desaturate-full draw DESATURATE-LUMINOSITY)
-                   (gimp-colorize draw 215 11 0)
+                   (gimp-drawable-desaturate draw DESATURATE-LUMA)
+                   (gimp-drawable-colorize-hsl draw 215 11 0)
                    )
        )
     
     ;sepia
     (if(= c41 13)(begin
-                   (gimp-desaturate-full draw DESATURATE-LUMINOSITY)
-                   (gimp-colorize draw 30 25 0)
+                   (gimp-drawable-desaturate draw DESATURATE-LUMA)
+                   (gimp-drawable-colorize-hsl draw 30 25 0)
                    )
        )
     
     ;set some funky colors
     (if( = invertA TRUE)(begin
-                          (set! imgLAB (car (plug-in-decompose 1 img draw "LAB" TRUE)))
+                          (set! imgLAB (car (plug-in-decompose RUN-NONINTERACTIVE img (vector draw) "lab" TRUE FALSE)))
                           (set! layersLAB (gimp-image-get-layers imgLAB))
-                          (set! layerA (aref (cadr layersLAB) 1))
-                          (gimp-invert layerA)
-                          (plug-in-recompose 1 imgLAB layerA)
+                          (set! layerA (vector-ref (car layersLAB) 1))
+                          (gimp-drawable-invert layerA FALSE)
+                          (plug-in-recompose RUN-NONINTERACTIVE imgLAB (vector layerA))
                           )
        )
     (if( = invertB TRUE)(begin
-                          (set! imgLAB (car (plug-in-decompose 1 img draw "LAB" TRUE)))
+                          (set! imgLAB (car (plug-in-decompose RUN-NONINTERACTIVE img (vector draw) "lab" TRUE FALSE)))
                           (set! layersLAB (gimp-image-get-layers imgLAB))
-                          (set! layerB (aref (cadr layersLAB) 2))
-                          (gimp-invert layerB)
-                          (plug-in-recompose 1 imgLAB layerB)
+                          (set! layerB (vector-ref (car layersLAB) 2))
+                          (gimp-drawable-invert layerB FALSE)
+                          (plug-in-recompose RUN-NONINTERACTIVE imgLAB (vector layerB))
                           )
        )
     
     ;add two blending layers
     (gimp-context-set-foreground '(0 0 0)) ;black
     (gimp-context-set-background '(255 255 255)) ;white
-    (gimp-image-insert-layer img overexpo 0 -1)
-    (gimp-image-insert-layer img vignette 0 -1)
+    (gimp-image-insert-layer img overexpo -1 -1)
+    (gimp-image-insert-layer img vignette -1 -1)
     (gimp-drawable-fill vignette FILL-TRANSPARENT)
     (gimp-drawable-fill overexpo FILL-TRANSPARENT)
     
@@ -420,21 +412,14 @@
     ;apply a reverse radial blend on layer
     ;then scale layer by "avig" factor with a local origin
     ;if double vignetting is needed, duplicate layer and set duplicate opacity to 80%
-    ; GIMP-3
-    ; (gimp-edit-blend vignette 2 0 2 100 0 REPEAT-NONE TRUE FALSE 0 0 TRUE blend_x blend_y endingx endingy)
-    (gimp-drawable-edit-gradient-fill vignette
-                  GRADIENT-RADIAL 0
-                  FALSE 1 0
-                  TRUE
-                  blend_x blend_y
-                  endingx endingy)
+    (begin (gimp-context-set-gradient-fg-transparent) (gimp-context-set-opacity 100) (gimp-context-set-paint-mode LAYER-MODE-NORMAL-LEGACY) (gimp-context-set-gradient-repeat-mode REPEAT-NONE) (gimp-context-set-gradient-reverse TRUE) (gimp-context-set-gradient-blend-color-space GRADIENT-BLEND-RGB-PERCEPTUAL) (gimp-drawable-edit-gradient-fill vignette GRADIENT-RADIAL 0 FALSE 1 0 TRUE blend_x blend_y endingx endingy))
     (gimp-layer-scale vignette (* owidth avig) (* oheight avig) 1)
-    ; (plug-in-spread 1 img vignette 50 50)
+    (gimp-drawable-merge-new-filter vignette "gegl:noise-spread" "" LAYER-MODE-REPLACE 1.0 "amount-x" 50 "amount-y" 50)
     (if (= adv TRUE) 
         ( begin 
-           (set! hvignette (car (gimp-layer-copy vignette 0)))
+           (set! hvignette (car (gimp-layer-copy vignette)))
            (gimp-layer-set-opacity hvignette 80)
-           (gimp-image-insert-layer img hvignette 0 -1)
+           (gimp-image-insert-layer img hvignette -1 -1)
            (gimp-layer-resize-to-image-size hvignette)
            )
         )
@@ -444,21 +429,20 @@
     ;swap foreground and background colors then
     ;apply a radial blend from center to farthest side of layer
     (gimp-context-swap-colors)
-    ; GIMP-3
-    ; (gimp-edit-blend overexpo 2 0 2 100 0 REPEAT-NONE FALSE FALSE 0 0 TRUE blend_x blend_y endingx endingy)
-    ; (plug-in-spread 1 img overexpo 50 50)
+    (begin (gimp-context-set-gradient-fg-transparent) (gimp-context-set-opacity 100) (gimp-context-set-paint-mode LAYER-MODE-NORMAL-LEGACY) (gimp-context-set-gradient-repeat-mode REPEAT-NONE) (gimp-context-set-gradient-reverse FALSE) (gimp-context-set-gradient-blend-color-space GRADIENT-BLEND-RGB-PERCEPTUAL) (gimp-drawable-edit-gradient-fill overexpo GRADIENT-RADIAL 0 FALSE 1 0 TRUE blend_x blend_y endingx endingy))
+    (gimp-drawable-merge-new-filter overexpo "gegl:noise-spread" "" LAYER-MODE-REPLACE 1.0 "amount-x" 50 "amount-y" 50)
     
     ;adding the black vignette
     ;selecting a feathered circle, invert selection and fill up with black
     (if (= is_black TRUE) 
         ( begin 
-           (gimp-image-insert-layer img black_vignette 0 -1)
+           (gimp-image-insert-layer img black_vignette -1 -1)
            (gimp-drawable-fill black_vignette FILL-TRANSPARENT)
            (gimp-image-select-ellipse img CHANNEL-OP-REPLACE x_black y_black radius radius)
            (gimp-selection-feather img (* radius 0.2))
            (gimp-selection-invert img)
            (gimp-context-set-foreground '(0 0 0))
-           (gimp-drawable-edit-bucket-fill black_vignette)
+           (gimp-drawable-edit-fill black_vignette FILL-FOREGROUND)
            (gimp-selection-none img)
            )
         )
@@ -467,68 +451,63 @@
     (if (> grain 0) 
         ( begin 
            ;fill new layer with neutral gray
-           (gimp-image-insert-layer img grain-layer 0 -1)
+           (gimp-image-insert-layer img grain-layer -1 -1)
            (gimp-drawable-fill grain-layer FILL-TRANSPARENT)
            (gimp-context-set-foreground '(128 128 128))
            (gimp-selection-all img)
-           (gimp-drawable-edit-bucket-fill grain-layer)
+           (gimp-drawable-edit-fill grain-layer FILL-FOREGROUND)
            (gimp-selection-none img)
            
            ;add grain and blur it
-           ; GIMP-3
-           ; (plug-in-hsv-noise 1 imgg grain-layer 2 0 0 100)
-           (gimp-drawable-merge-new-filter grain-layer "gegl:noise-hsv" 0 LAYER-MODE-REPLACE 1.0
-                                    "saturation-distance" 0 "value-distance" 0.04)
-
-           ; (plug-in-gauss 1 img grain-layer 0.5 0.5 1)
+           (gimp-drawable-merge-new-filter grain-layer "gegl:noise-hsv" "" LAYER-MODE-REPLACE 1.0 "holdness" 2 "hue-distance" 0 "saturation-distance" 0 "value-distance" (/ 100 255.0))
+           (gimp-drawable-merge-new-filter grain-layer "gegl:gaussian-blur" "" LAYER-MODE-REPLACE 1.0 "std-dev-x" (* 0.5 0.32) "std-dev-y" (* 0.5 0.32) "abyss-policy" "clamp")
            (gimp-layer-add-mask grain-layer grain-layer-mask)
            
            ;select the original image, copy and paste it as a layer mask into the grain layer
            (gimp-selection-all img)
            (gimp-edit-copy-visible img)
-           ; (gimp-floating-sel-anchor (car (gimp-edit-paste grain-layer-mask TRUE)))
+           (gimp-floating-sel-anchor (vector-ref (car (gimp-edit-paste grain-layer-mask TRUE)) 0))
            
            ;set color curves of layer mask, so that only gray areas become grainy
-           (gimp-drawable-curves-spline grain-layer-mask  HISTOGRAM-VALUE (vector 0 0 128 grain 255 0))
+           (gimp-drawable-curves-spline grain-layer-mask  HISTOGRAM-VALUE   (splineValue))
            )
         )
     
     ;sharpness layer
     (if(> sharp 0)
        (begin
-         (log-message "Adding sharpness layer")
          (if (> grain 0)(gimp-item-set-visible grain-layer FALSE))
          
          (gimp-edit-copy-visible aimg)
          (set! Visible (car (gimp-layer-new-from-visible aimg aimg "Visible")))
-         (gimp-image-insert-layer aimg Visible 0 -1)
+         (gimp-image-insert-layer aimg Visible -1 -1)
          
          (set! MaskImage (car (gimp-image-duplicate aimg)))
-         (set! MaskLayer (cadr (gimp-image-get-layers MaskImage)))
-         (set! OrigLayer (cadr (gimp-image-get-layers aimg)))
-         (set! HSVImage (car (plug-in-decompose TRUE aimg Visible "Value" TRUE)))
-         (set! HSVLayer (cadr (gimp-image-get-layers HSVImage)))
-         (set! SharpenLayer (car (gimp-layer-copy Visible TRUE)))
+         (set! MaskLayer (car (gimp-image-get-layers MaskImage)))
+         (set! OrigLayer (car (gimp-image-get-layers aimg)))
+         (set! HSVImage (car (plug-in-decompose RUN-NONINTERACTIVE aimg (vector Visible) "hsv" TRUE FALSE)))
+         (set! HSVLayer (car (gimp-image-get-layers HSVImage)))
+         (set! SharpenLayer (car (gimp-layer-copy Visible))) (gimp-layer-add-alpha SharpenLayer)
          
          ;smart sharpen from here: http://registry.gimp.org/node/108
-         (gimp-image-insert-layer img SharpenLayer 0 -1)
+         (gimp-image-insert-layer img SharpenLayer -1 -1)
          (gimp-selection-all HSVImage)
-         (gimp-edit-copy (aref HSVLayer 0))
+         (gimp-edit-copy (vector (vector-ref HSVLayer 2)))
          (gimp-image-delete HSVImage)
-         (gimp-floating-sel-anchor (car (gimp-edit-paste SharpenLayer FALSE)))
-         (gimp-layer-set-mode SharpenLayer VALUE-MODE)
-         (plug-in-edge TRUE MaskImage (aref MaskLayer 0) 6 1 0)
-         (gimp-levels-stretch (aref MaskLayer 0))
+         (gimp-floating-sel-anchor (vector-ref (car (gimp-edit-paste SharpenLayer FALSE)) 0))
+         (gimp-layer-set-mode SharpenLayer LAYER-MODE-HSV-VALUE-LEGACY)
+         (gimp-drawable-merge-new-filter (vector-ref MaskLayer 0) "gegl:edge" "" LAYER-MODE-REPLACE 1.0 "amount" 6 "border-behavior" "loop" "algorithm" "sobel")
+         (gimp-drawable-levels-stretch (vector-ref MaskLayer 0))
          (gimp-image-convert-grayscale MaskImage)
-         (plug-in-gauss TRUE MaskImage (aref MaskLayer 0) 6 6 TRUE)
+         (gimp-drawable-merge-new-filter (vector-ref MaskLayer 0) "gegl:gaussian-blur" "" LAYER-MODE-REPLACE 1.0 "std-dev-x" (* 6 0.32) "std-dev-y" (* 6 0.32) "abyss-policy" "clamp")
          (let* ((SharpenChannel (car (gimp-layer-create-mask SharpenLayer ADD-MASK-WHITE)))
                 )
            (gimp-layer-add-mask SharpenLayer SharpenChannel)
            (gimp-selection-all MaskImage)
-           (gimp-edit-copy (aref MaskLayer 0))
-           (gimp-floating-sel-anchor (car (gimp-edit-paste SharpenChannel FALSE)))
+           (gimp-edit-copy (vector (vector-ref MaskLayer 0)))
+           (gimp-floating-sel-anchor (vector-ref (car (gimp-edit-paste SharpenChannel FALSE)) 0))
            (gimp-image-delete MaskImage)
-           (plug-in-unsharp-mask TRUE img SharpenLayer 1 sharp 0)
+           (gimp-drawable-merge-new-filter SharpenLayer "gegl:unsharp-mask" "" LAYER-MODE-REPLACE 1.0 "std-dev" 1 "scale" sharp "threshold" 0)
            (gimp-layer-set-opacity SharpenLayer 80)
            (gimp-layer-set-edit-mask SharpenLayer FALSE)
            )
@@ -556,34 +535,29 @@
                              invertA invertB
                              adv is_black
                              centerx centery aradius)
-  (log-message (string-append "Pattern: " pattern))
-
-  (let* ((filelist (car (file-glob #:pattern pattern
-                                    #:filename-encoding TRUE))))
+  (gimp-message (string-append "Pattern: " pattern))
+  (let* ((filelist (car (file-glob pattern 1))))
     (while (not (null? filelist))
            (let* ((filename (car filelist))
                   (fileparts (strbreakup filename "."))
-                  (img (car (gimp-file-load RUN-NONINTERACTIVE filename filename)))
+                  (img (car (gimp-file-load RUN-NONINTERACTIVE filename)))
                   (adraw (vector-ref (car (gimp-image-get-selected-drawables img)) 0))
                   )
-             (log-message (string-append "Filename: " filename))
-             (display "img: ")(display img)(newline)
-             (display "adraw: ")(display adraw)(newline)
+             (gimp-message (string-append "Filename: " filename))
 
-             (log-message "Calling elsamuko-lomo")
+             (gimp-message "Calling elsamuko-lomo")
              (elsamuko-lomo img adraw avig asat acon
-                             sharp wide_angle gauss_blur
-                             motion_blur grain c41 
-                             invertA invertB
-                             adv is_black
-                             centerx centery aradius)
+                            sharp wide_angle gauss_blur
+                            motion_blur grain c41
+                            invertA invertB
+                            adv is_black
+                            centerx centery aradius)
 
-            (log-message "Saving image")
              (gimp-image-merge-visible-layers img EXPAND-AS-NECESSARY)
-             (set! adraw (car (gimp-image-get-selected-drawables img)))
+             (set! adraw (vector-ref (car (gimp-image-get-selected-drawables img)) 0))
 
-             (log-message "Saving")
-             (gimp-file-save RUN-NONINTERACTIVE img adraw filename filename)
+             (gimp-message "Saving")
+             (gimp-file-save RUN-NONINTERACTIVE img filename -1)
              (gimp-image-delete img)
              (set! filelist (cdr filelist))
              )
@@ -602,12 +576,12 @@ Latest version can be downloaded from http://registry.gimp.org/node/7870"
                     SF-IMAGE       "Input image"           0
                     SF-DRAWABLE    "Input drawable"        0
                     SF-ADJUSTMENT _"Vignetting Softness"   '(1.5 1 2 0.1 0.5 1 0)
-                    SF-ADJUSTMENT _"Saturation"            '(0.1  0  0.4 1 5 1 0)
-                    SF-ADJUSTMENT _"Contrast"              '(0.1  0  0.4 1 5 1 0)
+                    SF-ADJUSTMENT _"Saturation"            '(10 -40  40  1 5 1 0)
+                    SF-ADJUSTMENT _"Contrast"              '(10   0  40  1 5 1 0)
                     SF-ADJUSTMENT _"Sharpness"             '(0.8 0 2 0.1 0.2 1 0)
-                    SF-ADJUSTMENT _"Wide Angle Distortion" '(0 0 13 0.1 0.5 1 0)
-                    SF-ADJUSTMENT _"Gauss Blur"            '(0 0  5 0.1 0.5 1 0)
-                    SF-ADJUSTMENT _"Motion Blur"           '(0 0  5 0.1 0.5 1 0)
+                    SF-ADJUSTMENT _"Wide Angle Distortion" '(5 0 13 0.1 0.5 1 0)
+                    SF-ADJUSTMENT _"Gauss Blur"            '(1 0  5 0.1 0.5 1 0)
+                    SF-ADJUSTMENT _"Motion Blur"           '(3 0  5 0.1 0.5 1 0)
                     SF-ADJUSTMENT _"Grain"                 '(128 0 255 1 20 0 0)
                     SF-OPTION     _"Colors"                '("Neutral"
                                                              "Old Red"
