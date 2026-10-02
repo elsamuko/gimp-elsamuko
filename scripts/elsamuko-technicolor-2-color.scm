@@ -29,18 +29,18 @@
 
 (define (elsamuko-technicolor-2-color aimg adraw redpart greenpart cyanfill redfill yellowfill sharpen)
   (let* ((img          (car (gimp-item-get-image adraw)))
-         (owidth       (car (gimp-image-width img)))
-         (oheight      (car (gimp-image-height img)))
+         (owidth       (car (gimp-image-get-width img)))
+         (oheight      (car (gimp-image-get-height img)))
          (sharpenlayer (car (gimp-layer-copy adraw FALSE)))
          (redlayer     (car (gimp-layer-copy adraw FALSE)))
          (cyanlayer    (car (gimp-layer-copy adraw FALSE)))
          (yellowlayer  (car (gimp-layer-new img
+                                            "Yellow"
                                             owidth 
                                             oheight
                                             1
-                                            "Yellow" 
                                             30 ;opacity
-                                            OVERLAY-MODE)))
+                                            LAYER-MODE-OVERLAY)))
          ;decomposing filter colors, you may change these
          (red-R redpart)
          (red-G (/ (- 1 redpart) 2) )
@@ -83,15 +83,15 @@
     (gimp-context-set-background redfill)
     
     (gimp-selection-all img)
-    (gimp-edit-bucket-fill redlayer FG-BUCKET-FILL SCREEN-MODE 100 0 FALSE 0 0)
-    (gimp-edit-bucket-fill cyanlayer BG-BUCKET-FILL SCREEN-MODE 100 0 FALSE 0 0)
+    (gimp-drawable-edit-bucket-fill redlayer FG-BUCKET-FILL SCREEN-MODE 100 0 FALSE 0 0)
+    (gimp-drawable-edit-bucket-fill cyanlayer BG-BUCKET-FILL SCREEN-MODE 100 0 FALSE 0 0)
     
     (gimp-layer-set-mode cyanlayer MULTIPLY-MODE)
     
     ;add yellow layer
     (gimp-image-insert-layer img yellowlayer 0 -1)
     (gimp-context-set-foreground yellowfill)
-    (gimp-edit-bucket-fill yellowlayer FG-BUCKET-FILL NORMAL-MODE 100 0 FALSE 0 0)
+    (gimp-drawable-edit-bucket-fill yellowlayer)
     
     ;sharpness + contrast layer
     (if(= sharpen TRUE)
@@ -99,7 +99,7 @@
          (gimp-image-insert-layer img sharpenlayer 0 -1)
          (gimp-desaturate-full sharpenlayer DESATURATE-LIGHTNESS)
          (plug-in-unsharp-mask 1 img sharpenlayer 5 1 0)
-         (gimp-layer-set-mode sharpenlayer OVERLAY-MODE)
+         (gimp-layer-set-mode sharpenlayer LAYER-MODE-OVERLAY)
          (gimp-layer-set-opacity sharpenlayer 40)
          )
        )

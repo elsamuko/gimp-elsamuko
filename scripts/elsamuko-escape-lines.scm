@@ -23,8 +23,8 @@
 
 (define (elsamuko-escape-lines aimg adraw x0 y0 phi1 phi2 dphi1 number length roffset randomness xoffset yoffset aoffset color)
   (let* ((img (car (gimp-item-get-image adraw)))
-         (owidth (car (gimp-image-width img)))
-         (oheight (car (gimp-image-height img)))
+         (owidth (car (gimp-image-get-width img)))
+         (oheight (car (gimp-image-get-height img)))
          (coord (cons-array 4 'double))
          (iter 0)
          (x1 x0)
@@ -81,7 +81,7 @@
            )
     
     ;fill lines
-    (gimp-edit-bucket-fill adraw FG-BUCKET-FILL NORMAL-MODE 100 0 FALSE 0 0)    
+    (gimp-drawable-edit-bucket-fill adraw)    
     
     ; tidy up
     (gimp-selection-none img)

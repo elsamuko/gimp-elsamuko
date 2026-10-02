@@ -25,8 +25,8 @@
 (define (elsamuko-wb-puzzle aimg adraw puzzlewidth puzzleheight feathervalue)
   (let* ((img (car (gimp-item-get-image adraw)))
          (wblayer (car (gimp-layer-copy adraw FALSE)))
-         (owidth (car (gimp-image-width img)))
-         (oheight (car (gimp-image-height img)))
+         (owidth (car (gimp-image-get-width img)))
+         (oheight (car (gimp-image-get-height img)))
          (itermaxX (/ owidth puzzlewidth))
          (itermaxY (/ oheight puzzleheight))
          (iterwidth 0) ;iterators

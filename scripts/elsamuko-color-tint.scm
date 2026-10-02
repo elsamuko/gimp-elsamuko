@@ -22,8 +22,8 @@
 
 (define (elsamuko-color-tint aimg adraw color opacity saturation blackwhite)
   (let* ((img (car (gimp-item-get-image adraw)))
-         (owidth (car (gimp-image-width img)))
-         (oheight (car (gimp-image-height img)))
+         (owidth (car (gimp-image-get-width img)))
+         (oheight (car (gimp-image-get-height img)))
          (tint-layer 0)
          (tint-layer-mask 0)
          
@@ -54,7 +54,7 @@
     
     ;rise saturation
     (set! copy-layer (car (gimp-image-get-active-layer imgTMP)))
-    (gimp-hue-saturation copy-layer ALL-HUES 0 0 saturation)
+    (gimp-drawable-hue-saturation copy-layer HUE-RANGE-ALL 0 0 saturation)
     
     ;add tint layer and filter color
     (set! tmp-layer (car (gimp-layer-copy copy-layer FALSE)))
@@ -73,7 +73,7 @@
     ;colorize tint layer
     (gimp-context-set-foreground color)
     (gimp-selection-all imgTMP)
-    (gimp-edit-bucket-fill tmp-layer FG-BUCKET-FILL NORMAL-MODE 100 0 FALSE 0 0)
+    (gimp-drawable-edit-bucket-fill tmp-layer)
     
     ;get visible and add to original
     (gimp-item-set-visible copy-layer FALSE)
@@ -92,7 +92,7 @@
     (gimp-edit-copy layerS)
     
     ;add saturation mask
-    (set! tint-layer-mask (car (gimp-layer-create-mask tint-layer ADD-WHITE-MASK )))
+    (set! tint-layer-mask (car (gimp-layer-create-mask tint-layer ADD-MASK-WHITE )))
     (gimp-layer-add-mask tint-layer tint-layer-mask)
     (gimp-floating-sel-anchor (car (gimp-edit-paste tint-layer-mask TRUE)))
     

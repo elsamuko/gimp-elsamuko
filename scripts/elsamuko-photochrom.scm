@@ -30,8 +30,8 @@
                              num1 num2
                              dodge retro)
   (let* ((img (car (gimp-item-get-image adraw)))
-         (owidth (car (gimp-image-width img)))
-         (oheight (car (gimp-image-height img)))
+         (owidth (car (gimp-image-get-width img)))
+         (oheight (car (gimp-image-get-height img)))
          (offset1 (* oheight (/ num1 100)))
          (offset2 (* oheight (/ num2 100)))
          (dodge-layer (car (gimp-layer-copy adraw FALSE)))
@@ -42,52 +42,52 @@
          (lum-layer     (car (gimp-layer-copy adraw FALSE)))
          (extra-layer  0)
          (merge-layer (car (gimp-layer-new img
+                                           "Grain Merge"
                                            owidth 
                                            oheight
                                            RGBA-IMAGE
-                                           "Grain Merge" 
                                            50 
                                            GRAIN-MERGE-MODE)))
-         (merge-mask (car (gimp-layer-create-mask merge-layer ADD-WHITE-MASK)))
+         (merge-mask (car (gimp-layer-create-mask merge-layer ADD-MASK-WHITE)))
          (screen-layer (car (gimp-layer-new img
+                                            "Screen"
                                             owidth 
                                             oheight
                                             RGBA-IMAGE
-                                            "Screen" 
                                             10 
                                             SCREEN-MODE)))
-         (screen-mask (car (gimp-layer-create-mask screen-layer ADD-WHITE-MASK)))
+         (screen-mask (car (gimp-layer-create-mask screen-layer ADD-MASK-WHITE)))
          (multiply-layer (car (gimp-layer-new img
+                                              "Multiply"
                                               owidth 
                                               oheight
                                               RGBA-IMAGE
-                                              "Multiply" 
                                               10 
                                               MULTIPLY-MODE)))
-         (multiply-mask (car (gimp-layer-create-mask multiply-layer ADD-WHITE-MASK)))
+         (multiply-mask (car (gimp-layer-create-mask multiply-layer ADD-MASK-WHITE)))
          (retro-layer (car (gimp-layer-new img
+                                           "Retro 1"
                                            owidth 
                                            oheight
                                            RGBA-IMAGE
-                                           "Retro 1" 
                                            60 
                                            MULTIPLY-MODE)))
          (floatingsel 0)
-         (retro-mask (car (gimp-layer-create-mask retro-layer ADD-WHITE-MASK)))
+         (retro-mask (car (gimp-layer-create-mask retro-layer ADD-MASK-WHITE)))
          (retro-layer2 (car (gimp-layer-new img
+                                            "Retro 2"
                                             owidth 
                                             oheight
                                             RGBA-IMAGE
-                                            "Retro 2" 
                                             20 
                                             SCREEN-MODE)))
          (gradient-layer (car (gimp-layer-new img
+                                              "Gradient Overlay"
                                               owidth 
                                               oheight
                                               RGBA-IMAGE
-                                              "Gradient Overlay" 
                                               100 
-                                              OVERLAY-MODE)))
+                                              LAYER-MODE-OVERLAY)))
          )
     
     ; init
@@ -127,13 +127,13 @@
     ;set contrast layers
     (gimp-image-insert-layer img contrast-layer1 0 -1)
     (gimp-item-set-name contrast-layer1 "Contrast1")
-    (gimp-layer-set-mode contrast-layer1 OVERLAY-MODE)
+    (gimp-layer-set-mode contrast-layer1 LAYER-MODE-OVERLAY)
     (gimp-layer-set-opacity contrast-layer1 contrast)
     (gimp-desaturate-full contrast-layer1 DESATURATE-LUMINOSITY)
     
     (gimp-image-insert-layer img contrast-layer2 0 -1)
     (gimp-item-set-name contrast-layer2 "Contrast2")
-    (gimp-layer-set-mode contrast-layer2 OVERLAY-MODE)
+    (gimp-layer-set-mode contrast-layer2 LAYER-MODE-OVERLAY)
     (gimp-layer-set-opacity contrast-layer2 contrast)
     (gimp-desaturate-full contrast-layer2 DESATURATE-LUMINOSITY)
     
@@ -147,12 +147,12 @@
     (gimp-image-insert-layer img merge-layer 0 -1)
     (gimp-selection-all aimg)
     (gimp-context-set-foreground color1)
-    (gimp-edit-bucket-fill merge-layer FG-BUCKET-FILL NORMAL-MODE 100 0 FALSE 0 0)
+    (gimp-drawable-edit-bucket-fill merge-layer)
     (gimp-layer-add-mask merge-layer merge-mask)
     (gimp-context-set-foreground '(255 255 255))
     (gimp-context-set-background '(0 0 0))
     (gimp-edit-blend merge-mask FG-BG-RGB-MODE
-                     NORMAL-MODE GRADIENT-LINEAR
+                     LAYER-MODE-NORMAL GRADIENT-LINEAR
                      100 0 REPEAT-NONE
                      TRUE FALSE 1 0
                      TRUE 0 offset1 0 offset2)
@@ -161,12 +161,12 @@
     (gimp-image-insert-layer img screen-layer 0 -1)
     (gimp-selection-all aimg)
     (gimp-context-set-foreground color1)
-    (gimp-edit-bucket-fill screen-layer FG-BUCKET-FILL NORMAL-MODE 100 0 FALSE 0 0)
+    (gimp-drawable-edit-bucket-fill screen-layer)
     (gimp-layer-add-mask screen-layer screen-mask)
     (gimp-context-set-foreground '(255 255 255))
     (gimp-context-set-background '(0 0 0))
     (gimp-edit-blend screen-mask FG-BG-RGB-MODE
-                     NORMAL-MODE GRADIENT-LINEAR
+                     LAYER-MODE-NORMAL GRADIENT-LINEAR
                      100 0 REPEAT-NONE
                      TRUE FALSE 1 0
                      TRUE 0 offset1 0 offset2)
@@ -175,12 +175,12 @@
     (gimp-image-insert-layer img multiply-layer 0 -1)
     (gimp-selection-all aimg)
     (gimp-context-set-foreground color2)
-    (gimp-edit-bucket-fill multiply-layer FG-BUCKET-FILL NORMAL-MODE 100 0 FALSE 0 0)
+    (gimp-drawable-edit-bucket-fill multiply-layer)
     (gimp-layer-add-mask multiply-layer multiply-mask)
     (gimp-context-set-foreground '(255 255 255))
     (gimp-context-set-background '(0 0 0))
     (gimp-edit-blend multiply-mask FG-BG-RGB-MODE
-                     NORMAL-MODE GRADIENT-LINEAR
+                     LAYER-MODE-NORMAL GRADIENT-LINEAR
                      100 0 REPEAT-NONE
                      TRUE FALSE 1 0
                      TRUE 0 offset1 0 offset2)
@@ -191,7 +191,7 @@
                        (gimp-image-insert-layer img retro-layer 0 -1)
                        (gimp-selection-all aimg)
                        (gimp-context-set-foreground '(251 242 163))
-                       (gimp-edit-bucket-fill retro-layer FG-BUCKET-FILL NORMAL-MODE 100 0 FALSE 0 0)
+                       (gimp-drawable-edit-bucket-fill retro-layer)
                        (gimp-layer-add-mask retro-layer retro-mask)
                        (gimp-edit-copy contrast-layer1)
                        (set! floatingsel (car (gimp-edit-paste retro-mask TRUE)))
@@ -201,14 +201,14 @@
                        (gimp-image-insert-layer img retro-layer2 0 -1)
                        (gimp-selection-all aimg)
                        (gimp-context-set-foreground '(232 101 179))
-                       (gimp-edit-bucket-fill retro-layer2 FG-BUCKET-FILL NORMAL-MODE 100 0 FALSE 0 0)
+                       (gimp-drawable-edit-bucket-fill retro-layer2)
                        
                        ;gradient overlay
                        (gimp-image-insert-layer img gradient-layer 0 -1)
                        (gimp-context-set-foreground '(255 255 255))
                        (gimp-context-set-background '(0 0 0))
                        (gimp-edit-blend gradient-layer FG-BG-RGB-MODE
-                                        NORMAL-MODE GRADIENT-LINEAR
+                                        LAYER-MODE-NORMAL GRADIENT-LINEAR
                                         100 0 REPEAT-NONE
                                         FALSE FALSE 1 0
                                         TRUE 0 offset1 0 offset2)

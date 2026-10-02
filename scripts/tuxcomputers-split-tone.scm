@@ -59,8 +59,8 @@
          ;Read the current colours
          (myBackground (car (gimp-context-get-background)))
          ;Read the image width and height
-         (imageWidth (car (gimp-image-width theImage)))
-         (imageHeight (car (gimp-image-height theImage)))
+         (imageWidth (car (gimp-image-get-width theImage)))
+         (imageHeight (car (gimp-image-get-height theImage)))
          )
     
     ;define helper function    
@@ -69,7 +69,7 @@
                               colour opacity
                               invertMask)
       (let* ((layerCopy (car (gimp-layer-copy layer 1)))
-             (newLayer (car (gimp-layer-new image width height 1 "Overlay" 100 5)))
+             (newLayer (car (gimp-layer-new image "Overlay" width height 1 100 5)))
              (mergedLayer 0)
              (mask 0)
              )

@@ -28,15 +28,15 @@
                               lsmooth lthreshhold
                               contrast edge color)
   (let* ((img (car (gimp-item-get-image adraw)))
-         (owidth (car (gimp-image-width img)))
-         (oheight (car (gimp-image-height img)))
+         (owidth (car (gimp-image-get-width img)))
+         (oheight (car (gimp-image-get-height img)))
          (colorlayer (car (gimp-layer-new img
+                                          "Color" 
                                           owidth 
                                           oheight
                                           1
-                                          "Color" 
                                           100 
-                                          NORMAL-MODE)))
+                                          LAYER-MODE-NORMAL)))
          (shadowlayer 0)
          (lineslayer 0)
          )
@@ -57,9 +57,9 @@
     
     ;add color layer
     (gimp-image-insert-layer img colorlayer 0 -1)
-    (gimp-drawable-fill colorlayer TRANSPARENT-FILL)
+    (gimp-drawable-fill colorlayer FILL-TRANSPARENT)
     (gimp-selection-all img)
-    (gimp-edit-bucket-fill colorlayer FG-BUCKET-FILL NORMAL-MODE 100 0 FALSE 0 0)
+    (gimp-drawable-edit-bucket-fill colorlayer)
     (gimp-selection-none img)
     
     ;copy and add original image two times

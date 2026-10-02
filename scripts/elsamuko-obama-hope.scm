@@ -34,22 +34,22 @@
                              threshold4 color4
                              )
   (let* ((img (car (gimp-item-get-image adraw)))
-         (owidth (car (gimp-image-width img)))
-         (oheight (car (gimp-image-height img)))
+         (owidth (car (gimp-image-get-width img)))
+         (oheight (car (gimp-image-get-height img)))
          (yellowlayer (car (gimp-layer-new img
+                                           "Yellow"
                                            owidth 
                                            oheight
                                            1
-                                           "Yellow" 
                                            100 
-                                           NORMAL-MODE)))
+                                           LAYER-MODE-NORMAL)))
          (framelayer (car (gimp-layer-new img
+                                          "Frame"
                                           owidth 
                                           oheight
                                           1
-                                          "Frame" 
                                           100 
-                                          NORMAL-MODE)))
+                                          LAYER-MODE-NORMAL)))
          ;treshholds
          (layer1 0)
          (layer2 0)
@@ -57,33 +57,33 @@
          (layer4 0)
          ;selections
          (layer1b (car (gimp-layer-new img
+                                       "1 Fill"
                                        owidth 
                                        oheight
                                        1
-                                       "1 Fill" 
                                        100 
-                                       NORMAL-MODE)))
+                                       LAYER-MODE-NORMAL)))
          (layer2b (car (gimp-layer-new img
+                                       "2 Fill"
                                        owidth 
                                        oheight
                                        1
-                                       "2 Fill" 
                                        100 
-                                       NORMAL-MODE)))
+                                       LAYER-MODE-NORMAL)))
          (layer3b (car (gimp-layer-new img
+                                       "3 Fill"
                                        owidth 
                                        oheight
                                        1
-                                       "3 Fill" 
                                        100 
-                                       NORMAL-MODE)))
+                                       LAYER-MODE-NORMAL)))
          (layer4b (car (gimp-layer-new img
+                                       "4 Fill"
                                        owidth 
                                        oheight
                                        1
-                                       "4 Fill" 
                                        100 
-                                       NORMAL-MODE)))
+                                       LAYER-MODE-NORMAL)))
          )
     
     ;init
@@ -118,20 +118,20 @@
     ;add yellow color layer
     (gimp-context-set-foreground yellow)
     (gimp-image-insert-layer img yellowlayer 0 -1)
-    (gimp-drawable-fill yellowlayer TRANSPARENT-FILL)
+    (gimp-drawable-fill yellowlayer FILL-TRANSPARENT)
     (gimp-selection-all img)
-    (gimp-edit-bucket-fill yellowlayer FG-BUCKET-FILL NORMAL-MODE 100 0 FALSE 0 0)
+    (gimp-drawable-edit-bucket-fill yellowlayer)
     (gimp-selection-none img)
     
     ;add image layers
     (gimp-image-insert-layer img layer1b 0 -1)
-    (gimp-drawable-fill layer1b TRANSPARENT-FILL)
+    (gimp-drawable-fill layer1b FILL-TRANSPARENT)
     (gimp-image-insert-layer img layer2b 0 -1)
-    (gimp-drawable-fill layer2b TRANSPARENT-FILL)
+    (gimp-drawable-fill layer2b FILL-TRANSPARENT)
     (gimp-image-insert-layer img layer3b 0 -1)
-    (gimp-drawable-fill layer3b TRANSPARENT-FILL)
+    (gimp-drawable-fill layer3b FILL-TRANSPARENT)
     (gimp-image-insert-layer img layer4b 0 -1)
-    (gimp-drawable-fill layer4b TRANSPARENT-FILL)
+    (gimp-drawable-fill layer4b FILL-TRANSPARENT)
     
     ;stripes layer
     (gimp-threshold layer1 threshold1 255)
@@ -141,10 +141,10 @@
         (gimp-selection-shrink img corn)
         )
     (gimp-context-set-pattern pattern)
-    (gimp-edit-bucket-fill layer1b PATTERN-BUCKET-FILL NORMAL-MODE 100 0 FALSE 0 0)
+    (gimp-drawable-edit-bucket-fill layer1b PATTERN-BUCKET-FILL LAYER-MODE-NORMAL 100 0 FALSE 0 0)
     (gimp-image-select-color img CHANNEL-OP-REPLACE layer1b '(0 0 0))
     (gimp-context-set-foreground color1)
-    (gimp-edit-bucket-fill layer1b FG-BUCKET-FILL NORMAL-MODE 100 0 FALSE 0 0)
+    (gimp-drawable-edit-bucket-fill layer1b)
     (gimp-selection-none img)
     
     ;2nd layer
@@ -155,7 +155,7 @@
         (gimp-selection-shrink img corn)
         )
     (gimp-context-set-foreground color2)
-    (gimp-edit-bucket-fill layer2b FG-BUCKET-FILL NORMAL-MODE 100 0 FALSE 0 0)
+    (gimp-drawable-edit-bucket-fill layer2b)
     (gimp-selection-none img)
     
     ;3rd layer
@@ -166,7 +166,7 @@
         (gimp-selection-shrink img corn)
         )
     (gimp-context-set-foreground color3)
-    (gimp-edit-bucket-fill layer3b FG-BUCKET-FILL NORMAL-MODE 100 0 FALSE 0 0)
+    (gimp-drawable-edit-bucket-fill layer3b)
     (gimp-selection-none img)
     
     ;4th layer
@@ -177,17 +177,17 @@
         (gimp-selection-shrink img corn)
         )
     (gimp-context-set-foreground color4)
-    (gimp-edit-bucket-fill layer4b FG-BUCKET-FILL NORMAL-MODE 100 0 FALSE 0 0)
+    (gimp-drawable-edit-bucket-fill layer4b)
     (gimp-selection-none img)
     
     ;add frame layer
     (gimp-context-set-foreground yellow)
     (gimp-image-insert-layer img framelayer 0 -1)
-    (gimp-drawable-fill framelayer TRANSPARENT-FILL)
+    (gimp-drawable-fill framelayer FILL-TRANSPARENT)
     (gimp-selection-all img)
     (gimp-selection-shrink img frame)
     (gimp-selection-invert img)
-    (gimp-edit-bucket-fill framelayer FG-BUCKET-FILL NORMAL-MODE 100 0 FALSE 0 0)
+    (gimp-drawable-edit-bucket-fill framelayer)
     (gimp-selection-none img)
     
     ; tidy up

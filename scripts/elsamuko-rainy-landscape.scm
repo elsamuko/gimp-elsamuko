@@ -23,21 +23,21 @@
                                   cast preserve
                                   yellow-hues red-hues)
   (let* ((img (car (gimp-item-get-image adraw)))
-         (owidth (car (gimp-image-width img)))
-         (oheight (car (gimp-image-height img)))
+         (owidth (car (gimp-image-get-width img)))
+         (oheight (car (gimp-image-get-height img)))
          
          (hue-layer     (car (gimp-layer-copy adraw FALSE)))
          (bw-layer      (car (gimp-layer-copy adraw FALSE)))
          (extract-layer (car (gimp-layer-copy adraw FALSE)))
          
          (cast-layer (car (gimp-layer-new img
+                                          "Blue Cast"
                                           owidth 
                                           oheight
                                           1
-                                          "Blue Cast" 
                                           40 
                                           MULTIPLY-MODE)))
-         (cast-layer-mask (car (gimp-layer-create-mask cast-layer ADD-WHITE-MASK)))
+         (cast-layer-mask (car (gimp-layer-create-mask cast-layer ADD-MASK-WHITE)))
          (preserve-layer 0)
          (preserve-layer-mask 0)
          )
@@ -71,7 +71,7 @@
     (gimp-edit-copy-visible img)
     (set! preserve-layer (car (gimp-layer-new-from-visible img img "Preserve Y")))
     (gimp-image-insert-layer img preserve-layer 0 0)
-    (gimp-brightness-contrast preserve-layer -90 90)
+    (gimp-drawable-brightness-contrast preserve-layer -90 90)
     
     (set! preserve-layer-mask (car (gimp-layer-create-mask preserve-layer ADD-COPY-MASK)))
     (gimp-layer-add-mask preserve-layer preserve-layer-mask)
@@ -82,7 +82,7 @@
     (gimp-image-raise-item-to-top img preserve-layer)
     (gimp-context-set-foreground cast)
     (gimp-selection-all img)
-    (gimp-edit-bucket-fill cast-layer FG-BUCKET-FILL NORMAL-MODE 100 0 FALSE 0 0)
+    (gimp-drawable-edit-bucket-fill cast-layer)
     
     (gimp-edit-copy bw-layer)
     (gimp-layer-add-mask cast-layer cast-layer-mask)
@@ -90,8 +90,8 @@
     (gimp-selection-none img)
     
     ;colorize hue layer
-    (gimp-hue-saturation hue-layer YELLOW-HUES yellow-hues 0 0)
-    (gimp-hue-saturation hue-layer RED-HUES red-hues 0 0)
+    (gimp-drawable-hue-saturation hue-layer YELLOW-HUES yellow-hues 0 0)
+    (gimp-drawable-hue-saturation hue-layer RED-HUES red-hues 0 0)
 
     ;remove unneccessary layers
     (gimp-image-remove-layer img extract-layer)

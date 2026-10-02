@@ -26,38 +26,38 @@
                             redtint grain
                             edge extra-dark)
   (let* ((img (car (gimp-item-get-image adraw)))
-         (owidth (car (gimp-image-width img)))
-         (oheight (car (gimp-image-height img)))
+         (owidth (car (gimp-image-get-width img)))
+         (oheight (car (gimp-image-get-height img)))
          (desat-layer (car (gimp-layer-copy adraw FALSE)))
          (multiply-layer (car (gimp-layer-copy adraw FALSE)))
          (multiply-layer2 (car (gimp-layer-copy adraw FALSE)))
-         (multiply-layer2-mask (car (gimp-layer-create-mask multiply-layer2 ADD-WHITE-MASK)))
+         (multiply-layer2-mask (car (gimp-layer-create-mask multiply-layer2 ADD-MASK-WHITE)))
          (edge-layer (car (gimp-layer-copy adraw FALSE)))
          (red-layer  0)
          (overlay-layer1 (car (gimp-layer-copy adraw FALSE)))         
          (overlay-layer2 (car (gimp-layer-copy adraw FALSE)))         
          (yellow-layer (car (gimp-layer-new img
+                                            "Yellow Multiply"
                                             owidth 
                                             oheight
                                             RGBA-IMAGE
-                                            "Yellow Multiply" 
                                             10 
                                             MULTIPLY-MODE)))
          (sepia-layer (car (gimp-layer-new img
+                                           "Sepia"
                                            owidth 
                                            oheight
                                            RGBA-IMAGE
-                                           "Sepia" 
                                            50 
                                            GRAIN-MERGE-MODE)))
          (grain-layer (car (gimp-layer-new img
+                                           "Grain"
                                            owidth 
                                            oheight
                                            1
-                                           "Grain" 
                                            100 
-                                           OVERLAY-MODE)))
-         (grain-layer-mask (car (gimp-layer-create-mask grain-layer ADD-WHITE-MASK)))
+                                           LAYER-MODE-OVERLAY)))
+         (grain-layer-mask (car (gimp-layer-create-mask grain-layer ADD-MASK-WHITE)))
          )
     
     ; init
@@ -100,15 +100,15 @@
     ;set desaturated and multiply layer
     (gimp-image-insert-layer img desat-layer 0 -1)
     (gimp-item-set-name desat-layer "Desaturated")
-    (gimp-layer-set-mode desat-layer NORMAL-MODE)
+    (gimp-layer-set-mode desat-layer LAYER-MODE-NORMAL)
     (gimp-layer-set-opacity desat-layer 100)
-    (gimp-hue-saturation desat-layer ALL-HUES 0 0 desaturation)
+    (gimp-drawable-hue-saturation desat-layer HUE-RANGE-ALL 0 0 desaturation)
     
     (gimp-image-insert-layer img multiply-layer 0 -1)
     (gimp-item-set-name multiply-layer "Multiply 1")
     (gimp-layer-set-mode multiply-layer MULTIPLY-MODE)
     (gimp-layer-set-opacity multiply-layer multiply)
-    (gimp-hue-saturation multiply-layer ALL-HUES 0 0 desaturation)
+    (gimp-drawable-hue-saturation multiply-layer HUE-RANGE-ALL 0 0 desaturation)
     
     (if(= extra-dark TRUE)
        (begin
@@ -128,14 +128,14 @@
     ;set overlay layers
     (gimp-image-insert-layer img overlay-layer1 0 -1)
     (gimp-item-set-name overlay-layer1 "Overlay 1")
-    (gimp-layer-set-mode overlay-layer1 OVERLAY-MODE)
+    (gimp-layer-set-mode overlay-layer1 LAYER-MODE-OVERLAY)
     (gimp-layer-set-opacity overlay-layer1 overlay)
     (gimp-desaturate-full overlay-layer1 DESATURATE-LUMINOSITY)
     (gimp-levels overlay-layer1 HISTOGRAM-VALUE 70 150 gamma 0 255)
     
     (gimp-image-insert-layer img overlay-layer2 0 -1)
     (gimp-item-set-name overlay-layer2 "Overlay 2")
-    (gimp-layer-set-mode overlay-layer2 OVERLAY-MODE)
+    (gimp-layer-set-mode overlay-layer2 LAYER-MODE-OVERLAY)
     (gimp-layer-set-opacity overlay-layer2 overlay)
     (gimp-desaturate-full overlay-layer2 DESATURATE-LUMINOSITY)
     (gimp-levels overlay-layer2 HISTOGRAM-VALUE 70 150 gamma 0 255)
@@ -144,13 +144,13 @@
     (gimp-image-insert-layer img yellow-layer 0 -1)
     (gimp-selection-all img)
     (gimp-context-set-foreground color2)
-    (gimp-edit-bucket-fill yellow-layer FG-BUCKET-FILL NORMAL-MODE 100 0 FALSE 0 0)
+    (gimp-drawable-edit-bucket-fill yellow-layer)
     
     ;set sepia grain merge layer
     (gimp-image-insert-layer img sepia-layer 0 -1)
     (gimp-selection-all img)
     (gimp-context-set-foreground color1)
-    (gimp-edit-bucket-fill sepia-layer FG-BUCKET-FILL NORMAL-MODE 100 0 FALSE 0 0)
+    (gimp-drawable-edit-bucket-fill sepia-layer)
     
     ;move red tint layer to top
     (gimp-image-raise-item-to-top img red-layer)
@@ -160,10 +160,10 @@
        (begin
          ;fill new layer with neutral gray
          (gimp-image-insert-layer img grain-layer 0 -1)
-         (gimp-drawable-fill grain-layer TRANSPARENT-FILL)
+         (gimp-drawable-fill grain-layer FILL-TRANSPARENT)
          (gimp-context-set-foreground '(128 128 128))
          (gimp-selection-all img)
-         (gimp-edit-bucket-fill grain-layer FG-BUCKET-FILL NORMAL-MODE 100 0 FALSE 0 0)
+         (gimp-drawable-edit-bucket-fill grain-layer)
          (gimp-selection-none img)
          
          ;add grain and blur it

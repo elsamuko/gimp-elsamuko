@@ -22,13 +22,13 @@
 
 (define (elsamuko-erosion-sharpen img draw op gauss_blur)
   (let*
-      ((owidth (car (gimp-image-width img)))
-       (oheight (car (gimp-image-height img)))
+      ((owidth (car (gimp-image-get-width img)))
+       (oheight (car (gimp-image-get-height img)))
        (blurred-layer (car (gimp-layer-copy draw FALSE)))
        (erode-layer (car (gimp-layer-copy draw FALSE)))
        (dilate-layer (car (gimp-layer-copy draw FALSE)))
-       (erode-layermask (car (gimp-layer-create-mask erode-layer ADD-WHITE-MASK)))
-       (dilate-layermask (car (gimp-layer-create-mask dilate-layer ADD-WHITE-MASK)))
+       (erode-layermask (car (gimp-layer-create-mask erode-layer ADD-MASK-WHITE)))
+       (dilate-layermask (car (gimp-layer-create-mask dilate-layer ADD-MASK-WHITE)))
        (additive-layer 0)
        (subtractive-layer 0)
        )
@@ -51,7 +51,7 @@
     
     ; subtract second from first
     (gimp-image-lower-item img blurred-layer)
-    (gimp-layer-set-mode blurred-layer NORMAL-MODE)
+    (gimp-layer-set-mode blurred-layer LAYER-MODE-NORMAL)
     (gimp-layer-set-mode draw SUBTRACT-MODE)
     (gimp-edit-copy-visible img)
     (set! additive-layer (car (gimp-layer-new-from-visible img img "Additive") ))
@@ -59,7 +59,7 @@
     
     ; set modes back to normal
     (gimp-item-set-visible subtractive-layer TRUE)
-    (gimp-layer-set-mode draw NORMAL-MODE)
+    (gimp-layer-set-mode draw LAYER-MODE-NORMAL)
     
     ; add and erode copy
     (gimp-image-insert-layer img erode-layer 0 -1)
