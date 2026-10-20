@@ -55,21 +55,21 @@
                                           oheight
                                           1
                                           100 
-                                          ADDITION-MODE)))
+                                          LAYER-MODE-ADDITION-LEGACY)))
          (smearlayer2 (car (gimp-layer-new img
                                            "Smearing2"
                                            owidth 
                                            oheight
                                            1
                                            100 
-                                           GRAIN-MERGE-MODE)))
+                                           LAYER-MODE-GRAIN-MERGE-LEGACY)))
          (letteringlayer (car (gimp-layer-new img
                                               "Lettering"
                                               owidth 
                                               oheight
                                               1
                                               100 
-                                              ADDITION-MODE)))
+                                              LAYER-MODE-ADDITION-LEGACY)))
          )
     
     ; init
@@ -126,12 +126,12 @@
     
     (define (triangle_array x0 y0 x1 y1 x2 y2)
       (let* ((n_array (cons-array 6 'double)))
-        (aset n_array 0 x0 )
-        (aset n_array 1 y0 )
-        (aset n_array 2 x1)
-        (aset n_array 3 y1)
-        (aset n_array 4 x2)
-        (aset n_array 5 y2)
+        (vector-set! n_array 0 x0 )
+        (vector-set! n_array 1 y0 )
+        (vector-set! n_array 2 x1)
+        (vector-set! n_array 3 y1)
+        (vector-set! n_array 4 x2)
+        (vector-set! n_array 5 y2)
         n_array)
       )
     
@@ -169,7 +169,7 @@
     (gimp-context-set-background '(255 255 255))
     
     ;add lettering
-    (gimp-image-insert-layer img letteringlayer 0 -1)
+    (gimp-image-insert-layer img letteringlayer -1 -1)
     (gimp-drawable-fill letteringlayer FILL-TRANSPARENT)
     (gimp-context-set-foreground letteringcolor)
     
@@ -180,7 +180,7 @@
            
            ;top phototext
            (gimp-floating-sel-anchor
-            (car (gimp-text-fontname img
+            (car (gimp-text-font img
                                      letteringlayer
                                      (+ (- distancetofirstnumber (* (* 1 mm) (- (/ textlength 2) 1)))
                                         (* (- framenumber (- x 0.5)) framewidth)
@@ -188,29 +188,29 @@
                                      0
                                      phototext
                                      0 TRUE
-                                     (* 1.5 mm) PIXELS
+                                     (* 1.5 mm)
                                      font )))
            
            ;top framenumber
            (gimp-floating-sel-anchor
-            (car (gimp-text-fontname img
+            (car (gimp-text-font img
                                      letteringlayer
                                      (+ distancetofirstnumber (* (- framenumber x) framewidth))
                                      0.0
                                      (number->string framenumber)
                                      0 TRUE
-                                     (* 2 mm) PIXELS
+                                     (* 2 mm)
                                      font )))
            
            ;down framennumber
            (gimp-floating-sel-anchor
-            (car (gimp-text-fontname img
+            (car (gimp-text-font img
                                      letteringlayer
                                      (+ distancetofirstnumber (* (- framenumber x) framewidth))
                                      (* 0.94 oheight)
                                      (number->string framenumber)
                                      0 TRUE
-                                     (* 2 mm) PIXELS
+                                     (* 2 mm)
                                      font )))
            
            ;dx
@@ -220,22 +220,23 @@
                            (* 13 mm)
                            (* 2.2 mm)
                            dx1 dx2 framenumber 0) ;dx1 dx2 fn A
-           (gimp-drawable-edit-bucket-fill letteringlayer)
+           (if (= (car (gimp-selection-is-empty img)) FALSE) ;frames outside of the image
+               (gimp-drawable-edit-fill letteringlayer FILL-FOREGROUND))
            (gimp-selection-none img)
            
            ;framenumberA
            (gimp-floating-sel-anchor
-            (car (gimp-text-fontname img
+            (car (gimp-text-font img
                                      letteringlayer
                                      (+ (+ distancetofirstnumber mm) (* (- framenumber (- x 0.5)) framewidth))
                                      (* 0.945 oheight)
                                      (string-append (number->string framenumber) "A")
                                      0 TRUE
-                                     (* 1.5 mm) PIXELS
+                                     (* 1.5 mm)
                                      font )))
            
            ;triangle
-           (gimp-image-select-polygon img CHANNEL-OP-ADD 6
+           (gimp-image-select-polygon img CHANNEL-OP-ADD
                              (triangle_array (+ (- distancetofirstnumber mm) (* (- framenumber (- x 0.5)) framewidth))
                                              (* 0.945 oheight)
                                              (+ (+ distancetofirstnumber (* 0.7 mm)) (* (- framenumber (- x 0.5)) framewidth))
@@ -243,7 +244,8 @@
                                              (+ (- distancetofirstnumber  mm) (* (- framenumber (- x 0.5)) framewidth))
                                              (+ (* 0.945 oheight) (* 1.5 mm))
                                              )) 
-           (gimp-drawable-edit-bucket-fill letteringlayer)
+           (if (= (car (gimp-selection-is-empty img)) FALSE) ;frames outside of the image
+               (gimp-drawable-edit-fill letteringlayer FILL-FOREGROUND))
            (gimp-selection-none img)
            
            ;dxA
@@ -253,14 +255,15 @@
                            (* 13 mm)
                            (* 2.2 mm)
                            dx1 dx2 framenumber 1) ;dx1 dx2 fn A
-           (gimp-drawable-edit-bucket-fill letteringlayer)
+           (if (= (car (gimp-selection-is-empty img)) FALSE) ;frames outside of the image
+               (gimp-drawable-edit-fill letteringlayer FILL-FOREGROUND))
            (gimp-selection-none img)
            
            (set! framenumber (+ framenumber 1))
            )
     
     ;add new layer and set sprocket holes
-    (gimp-image-insert-layer img shlayer 0 -1)
+    (gimp-image-insert-layer img shlayer -1 -1)
     (gimp-drawable-fill shlayer FILL-TRANSPARENT)
     
     (while (< holenumber (+ numberofshs 5))
@@ -276,26 +279,26 @@
            (set! holenumber (+ holenumber 1))
            )
     ;    (gimp-context-set-foreground letteringcolor)
-    ;    (gimp-drawable-edit-bucket-fill shlayer)
+    ;    (gimp-drawable-edit-fill shlayer FILL-FOREGROUND)
     ;    (gimp-selection-shrink img 1)
     (gimp-context-set-foreground shcolor)
-    (gimp-drawable-edit-bucket-fill shlayer)
+    (gimp-drawable-edit-fill shlayer FILL-FOREGROUND)
     
     ;smear sprocket holes
-    (gimp-image-insert-layer img smearlayer 0 -1)
+    (gimp-image-insert-layer img smearlayer -1 -1)
     (gimp-image-lower-item img smearlayer)
     (gimp-drawable-fill smearlayer FILL-TRANSPARENT)
     (gimp-selection-grow img (* 0.2 mm))
     (gimp-selection-feather img (* 1 mm))
     (gimp-context-set-foreground letteringcolor)
-    (gimp-drawable-edit-bucket-fill smearlayer)
+    (gimp-drawable-edit-fill smearlayer FILL-FOREGROUND)
     
     (gimp-selection-grow img (* 0.2 mm))
-    (gimp-image-insert-layer img smearlayer2 0 -1)
+    (gimp-image-insert-layer img smearlayer2 -1 -1)
     (gimp-image-lower-item img smearlayer2)
     (gimp-drawable-fill smearlayer2 FILL-TRANSPARENT)
-    (gimp-edit-copy adraw)
-    (gimp-floating-sel-anchor (car (gimp-edit-paste smearlayer2 TRUE)))
+    (gimp-edit-copy (vector adraw))
+    (gimp-floating-sel-anchor (vector-ref (car (gimp-edit-paste smearlayer2 TRUE)) 0))
     
     ;tidy up
     (gimp-selection-none img)

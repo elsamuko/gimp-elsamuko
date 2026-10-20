@@ -55,7 +55,7 @@
                                  highColour highOpacity
                                  shadColour shadOpacity
                                  edgeDetection)
-  (let*( (layerEdgeDetect (car (gimp-layer-copy theLayer FALSE)))
+  (let*( (layerEdgeDetect (car (gimp-layer-copy theLayer)))
          ;Read the current colours
          (myBackground (car (gimp-context-get-background)))
          ;Read the image width and height
@@ -68,26 +68,26 @@
                               name width height
                               colour opacity
                               invertMask)
-      (let* ((layerCopy (car (gimp-layer-copy layer 1)))
+      (let* ((layerCopy (car (gimp-layer-copy layer)))
              (newLayer (car (gimp-layer-new image "Overlay" width height 1 100 5)))
              (mergedLayer 0)
              (mask 0)
              )
         ;main layer
         (gimp-context-set-background colour)
-        (gimp-image-insert-layer image layerCopy 0 0)
+        (gimp-image-insert-layer image layerCopy -1 0)
         (gimp-item-set-name layerCopy name)
         
         ;overlay layer
-        (gimp-image-insert-layer image newLayer 0 0)
+        (gimp-image-insert-layer image newLayer -1 0)
         (gimp-layer-set-mode newLayer 5)
-        (gimp-edit-fill newLayer 1)
+        (gimp-drawable-edit-fill newLayer FILL-BACKGROUND)
         (set! mergedLayer (car (gimp-image-merge-down image newLayer 0)))
         
         ;Add a layer mask
         (set! mask (car (gimp-layer-create-mask layermask 5)))
         (gimp-layer-add-mask mergedLayer mask)
-        (if (= invertMask TRUE) (gimp-invert mask))
+        (if (= invertMask TRUE) (gimp-drawable-invert mask FALSE))
         
         ;Change the merged layers opacity
         (gimp-layer-set-opacity mergedLayer opacity)
@@ -104,13 +104,14 @@
     ;Edge Detection
     (if (= edgeDetection TRUE)
         (begin
-          (gimp-image-insert-layer theImage layerEdgeDetect 0 1)
-          (plug-in-edge 1 theImage layerEdgeDetect 2.0 1 0)
+          (gimp-image-insert-layer theImage layerEdgeDetect -1 1)
+          (gimp-drawable-merge-new-filter layerEdgeDetect "gegl:edge" "" LAYER-MODE-REPLACE 1.0 "amount" 2.0 "border-behavior" "clamp" "algorithm" "sobel")
+
           )
         )
     
     ;Desaturate the layer
-    (gimp-desaturate theLayer)
+    (gimp-drawable-desaturate theLayer DESATURATE-LIGHTNESS)
     
     ;Add the shadows layer
     (layer-colour-add theImage theLayer layerEdgeDetect

@@ -23,7 +23,7 @@
 
 (define (elsamuko-photo-border aimg adraw aplace ashift aradius aborder_distance)
   (let*  ((img (car (gimp-item-get-image adraw)))
-          (draw (car (gimp-layer-copy adraw FALSE)))
+          (draw (car (gimp-layer-copy adraw)))
           (border_distance (/ aborder_distance 100))
           )
     
@@ -43,14 +43,14 @@
                                                 oheight
                                                 1
                                                 100 
-                                                ADDITION-MODE)))
+                                                LAYER-MODE-ADDITION-LEGACY)))
               (soft_margin_2 (car (gimp-layer-new img
                                                   "Soft Margin 2"
                                                   owidth 
                                                   oheight
                                                   1
                                                   100 
-                                                  LAYER-MODE-OVERLAY)))
+                                                  LAYER-MODE-OVERLAY-LEGACY)))
               (hard_margin (car (gimp-layer-new img
                                                 "Hard Margin"
                                                 owidth 
@@ -61,7 +61,7 @@
               )
         
         ;one layer with soft, red ending
-        (gimp-image-insert-layer img soft_margin 0 -1)
+        (gimp-image-insert-layer img soft_margin -1 -1)
         (gimp-drawable-fill soft_margin FILL-TRANSPARENT)
         
         (set! radius (* aradius oheight)) ;radius is diameter...
@@ -73,11 +73,11 @@
         (gimp-selection-feather img thickness)
         (gimp-selection-invert img)
         (gimp-context-set-foreground '(174 28 14))
-        (gimp-drawable-edit-bucket-fill soft_margin)
+        (gimp-drawable-edit-fill soft_margin FILL-FOREGROUND)
         (gimp-selection-none img)
         
         ;one layer with hard, white (overexposed) ending
-        (gimp-image-insert-layer img hard_margin 0 -1)
+        (gimp-image-insert-layer img hard_margin -1 -1)
         (gimp-drawable-fill hard_margin FILL-TRANSPARENT)
 
         ; make taller to prevent mblur leaking on top
@@ -88,15 +88,16 @@
         (gimp-image-select-ellipse img CHANNEL-OP-REPLACE xcoord ycoord radius radius)
         (gimp-selection-invert img)
         ;(script-fu-distress-selection img hard_margin 127 8 3 2 FALSE TRUE)
-        (script-fu-distress-selection img hard_margin 127 12 2 2 FALSE TRUE)
-        (script-fu-distress-selection img hard_margin 127 12 1 2 FALSE TRUE)
+        (script-fu-distress-selection img (vector hard_margin) 0.5 12 2 2 FALSE TRUE)
+        (script-fu-distress-selection img (vector hard_margin) 0.5 12 1 2 FALSE TRUE)
         (gimp-context-set-foreground '(255 255 255))
-        (gimp-drawable-edit-bucket-fill hard_margin)
+        (gimp-drawable-edit-fill hard_margin FILL-FOREGROUND)
         (gimp-selection-none img)
-        (plug-in-mblur 1 img hard_margin 0 (* thickness 0.4) 90 0 0)
-        (plug-in-unsharp-mask 1 img hard_margin 5 2 0)
-        (plug-in-unsharp-mask 1 img hard_margin 2 1 0)
-        (plug-in-gauss 1 img hard_margin 1 1 1)
+        (gimp-drawable-merge-new-filter hard_margin "gegl:motion-blur-linear" "" LAYER-MODE-REPLACE 1.0 "length" (* thickness 0.4) "angle" 90)
+        (gimp-drawable-merge-new-filter hard_margin "gegl:unsharp-mask" "" LAYER-MODE-REPLACE 1.0 "std-dev" 5 "scale" 2 "threshold" 0)
+        (gimp-drawable-merge-new-filter hard_margin "gegl:unsharp-mask" "" LAYER-MODE-REPLACE 1.0 "std-dev" 2 "scale" 1 "threshold" 0)
+        (gimp-drawable-merge-new-filter hard_margin "gegl:gaussian-blur" "" LAYER-MODE-REPLACE 1.0 "std-dev-x" 0.32 "std-dev-y" 0.32 "abyss-policy" "clamp")
+
 
         ; reset to oheight again
         (gimp-layer-resize hard_margin owidth oheight 0 (- 0 thickness))
@@ -113,7 +114,7 @@
     (if (> aplace 0)
         (gimp-image-rotate img (- aplace 1))
         )
-    (set! draw (car (gimp-image-get-active-drawable img)))
+    (set! draw (vector-ref (car (gimp-image-get-selected-drawables img)) 0))
     
     ;calling border helper function
     (script-fu-photo-border-helper img draw ashift aradius border_distance)

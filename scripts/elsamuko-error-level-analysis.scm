@@ -41,28 +41,30 @@
     (gimp-image-undo-group-start img)
     
     ;save image as 70% jpeg
+    ;GIMP 3 Script-Fu can't delete files, so use a GIMP temp file instead of filename
+    (set! filename (car (gimp-temp-file "jpg")))
     (set! img-tmp (car (gimp-image-duplicate img)))
     (gimp-image-merge-visible-layers img-tmp EXPAND-AS-NECESSARY)
-    (set! draw-tmp (car (gimp-image-get-active-drawable img-tmp)))
-    (file-jpeg-save RUN-NONINTERACTIVE img-tmp draw-tmp filename filename quality 0 0 0 "GIMP ELA Temporary Image" 0 0 0 0)
+    (set! draw-tmp (vector-ref (car (gimp-image-get-selected-drawables img-tmp)) 0))
+    (file-jpeg-export #:run-mode RUN-NONINTERACTIVE #:image img-tmp #:file filename #:quality quality)
     
     ;open 70% jpeg, set as diff layer
     (set! draw-tmp (car(gimp-file-load-layer RUN-NONINTERACTIVE img-tmp filename)))
-    (gimp-image-insert-layer img-tmp draw-tmp 0 -1)
-    (gimp-layer-set-mode draw-tmp DIFFERENCE-MODE)
-    (file-delete filename)
+    (gimp-image-insert-layer img-tmp draw-tmp -1 -1)
+    (gimp-layer-set-mode draw-tmp LAYER-MODE-DIFFERENCE-LEGACY)
     
     ;error layer on top
     (gimp-edit-copy-visible img-tmp)
     (set! error-layer (car (gimp-layer-new-from-visible img-tmp img-tmp "Error Levels") ))
-    (gimp-image-insert-layer img-tmp error-layer 0 -1)
-    (gimp-levels-stretch error-layer)
+    (gimp-image-insert-layer img-tmp error-layer -1 -1)
+    (gimp-drawable-merge-new-filter error-layer "gegl:stretch-contrast" "" LAYER-MODE-REPLACE 1.0 "keep-colors" FALSE "perceptual" TRUE)
+
     ;(gimp-display-new img-tmp)
     
     ;add error levels as layer on orig image
     (gimp-edit-copy-visible img-tmp)
     (set! error-layer (car (gimp-layer-new-from-visible img-tmp img "Error Levels") ))
-    (gimp-image-insert-layer img error-layer 0 -1)
+    (gimp-image-insert-layer img error-layer -1 -1)
     (gimp-item-set-name error-layer "Error Levels")
     
     ; tidy up

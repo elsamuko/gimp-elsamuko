@@ -50,56 +50,55 @@
     
     ;filter ops on new image
     (gimp-edit-copy-visible img)
-    (set! imgTMP (car (gimp-edit-paste-as-new)))
+    (set! imgTMP (car (gimp-edit-paste-as-new-image)))
     
     ;rise saturation
-    (set! copy-layer (car (gimp-image-get-active-layer imgTMP)))
-    (gimp-drawable-hue-saturation copy-layer HUE-RANGE-ALL 0 0 saturation)
+    (set! copy-layer (vector-ref (car (gimp-image-get-selected-layers imgTMP)) 0))
+    (gimp-drawable-hue-saturation copy-layer HUE-RANGE-ALL 0 0 saturation 0)
     
     ;add tint layer and filter color
-    (set! tmp-layer (car (gimp-layer-copy copy-layer FALSE)))
+    (set! tmp-layer (car (gimp-layer-copy copy-layer)))
     (gimp-item-set-name tmp-layer "Temp")
-    (gimp-image-insert-layer imgTMP tmp-layer 0 -1)
-    (plug-in-colors-channel-mixer 1 img tmp-layer TRUE
-                                  red blue green ;R
-                                  0 0 0 ;G
-                                  0 0 0 ;B
-                                  )
+    (gimp-image-insert-layer imgTMP tmp-layer -1 -1)
+    (gimp-drawable-merge-new-filter tmp-layer "gegl:mono-mixer" "" LAYER-MODE-REPLACE 1.0
+                                    "red" red "green" blue "blue" green ;R
+                                    )
     
     ;add filter mask
-    (set! tmp-layer-mask (car (gimp-layer-create-mask tmp-layer ADD-COPY-MASK)))
+    (set! tmp-layer-mask (car (gimp-layer-create-mask tmp-layer ADD-MASK-COPY)))
     (gimp-layer-add-mask tmp-layer tmp-layer-mask)
     
     ;colorize tint layer
     (gimp-context-set-foreground color)
     (gimp-selection-all imgTMP)
-    (gimp-drawable-edit-bucket-fill tmp-layer)
+    (gimp-drawable-edit-fill tmp-layer FILL-FOREGROUND)
     
     ;get visible and add to original
     (gimp-item-set-visible copy-layer FALSE)
     (gimp-edit-copy-visible imgTMP)
     (set! tint-layer (car (gimp-layer-new-from-visible imgTMP img "Tint") ))
-    (gimp-image-insert-layer img tint-layer 0 0)
+    (gimp-image-insert-layer img tint-layer -1 0)
     
     ;set modes
-    (gimp-layer-set-mode tint-layer SCREEN-MODE)
+    (gimp-layer-set-mode tint-layer LAYER-MODE-SCREEN-LEGACY)
     (gimp-layer-set-opacity tint-layer opacity)
     
     ;get saturation layer
-    (set! imgHSV (car (plug-in-decompose 1 imgTMP copy-layer "HSV" TRUE)))
+    (set! imgHSV (car (plug-in-decompose RUN-NONINTERACTIVE imgTMP (vector copy-layer) "hsv" TRUE FALSE)))
     (set! layersHSV (gimp-image-get-layers imgHSV))
-    (set! layerS (aref (cadr layersHSV) 1))
-    (gimp-edit-copy layerS)
+    (set! layerS (vector-ref (car layersHSV) 1))
+
+    (gimp-edit-copy (vector layerS))
     
     ;add saturation mask
     (set! tint-layer-mask (car (gimp-layer-create-mask tint-layer ADD-MASK-WHITE )))
     (gimp-layer-add-mask tint-layer tint-layer-mask)
-    (gimp-floating-sel-anchor (car (gimp-edit-paste tint-layer-mask TRUE)))
+    (gimp-floating-sel-anchor (vector-ref (car (gimp-edit-paste tint-layer-mask TRUE)) 0))
     
     ;desaturate original
     (if (= blackwhite TRUE) 
         ( begin 
-           (gimp-desaturate-full adraw DESATURATE-LUMINOSITY)
+           (gimp-drawable-desaturate adraw DESATURATE-LUMA)
            )
         )
     

@@ -25,11 +25,13 @@
 
 
 (define (elsamuko-difference-layers img draw)
-  (if (< 1 (car (gimp-image-get-layers img)))
+  (if (< 1 (vector-length (car (gimp-image-get-layers img))))
       (let*
-          ((layer-list (cadr (gimp-image-get-layers img)))
-           (top-layer (aref layer-list 0))
-           (bottom-layer (aref layer-list 1))
+          ((layer-list (car (gimp-image-get-layers img)))
+           (top-layer (vector-ref layer-list
+ 0))
+           (bottom-layer (vector-ref layer-list
+ 1))
            (additive-layer 0)
            (subtractive-layer 0)
            )
@@ -39,23 +41,23 @@
         (gimp-image-undo-group-start img)
         
         ;subtract first from second
-        (gimp-layer-set-mode top-layer SUBTRACT-MODE)
+        (gimp-layer-set-mode top-layer LAYER-MODE-SUBTRACT-LEGACY)
         (gimp-edit-copy-visible img)
         (set! subtractive-layer (car (gimp-layer-new-from-visible img img "Subtractive") ))
-        (gimp-image-insert-layer img subtractive-layer 0 0)
+        (gimp-image-insert-layer img subtractive-layer -1 0)
         (gimp-item-set-visible subtractive-layer FALSE)
         
         ;subtract second from first
         (gimp-image-lower-item img top-layer)
         (gimp-layer-set-mode top-layer LAYER-MODE-NORMAL)
-        (gimp-layer-set-mode bottom-layer SUBTRACT-MODE)
+        (gimp-layer-set-mode bottom-layer LAYER-MODE-SUBTRACT-LEGACY)
         (gimp-edit-copy-visible img)
         (set! additive-layer (car (gimp-layer-new-from-visible img img "Additive") ))
-        (gimp-image-insert-layer img additive-layer 0 0)
+        (gimp-image-insert-layer img additive-layer -1 0)
         
         (gimp-item-set-visible subtractive-layer TRUE)
-        (gimp-layer-set-mode additive-layer ADDITION-MODE)
-        (gimp-layer-set-mode subtractive-layer SUBTRACT-MODE)
+        (gimp-layer-set-mode additive-layer LAYER-MODE-ADDITION-LEGACY)
+        (gimp-layer-set-mode subtractive-layer LAYER-MODE-SUBTRACT-LEGACY)
         
         (gimp-layer-set-mode bottom-layer LAYER-MODE-NORMAL)
         

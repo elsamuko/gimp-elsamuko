@@ -23,11 +23,13 @@
 
 
 (define (elsamuko-glass-displacement img draw strength)
-  (if (< 1 (car (gimp-image-get-layers img)))
+  (if (< 1 (vector-length (car (gimp-image-get-layers img))))
       (let*
-          ((layer-list (cadr (gimp-image-get-layers img)))
-           (gravure-layer (aref layer-list 0))
-           (image-layer (aref layer-list 1))
+          ((layer-list (car (gimp-image-get-layers img)))
+           (gravure-layer (vector-ref layer-list
+ 0))
+           (image-layer (vector-ref layer-list
+ 1))
            (x-layer 0)
            (y-layer 0)
            )
@@ -37,24 +39,35 @@
         (gimp-image-undo-group-start img)
         
         ;duplicate x-layer
-        (set! x-layer (car(gimp-layer-copy gravure-layer FALSE)))
-        (set! y-layer (car(gimp-layer-copy gravure-layer FALSE)))
-        (gimp-image-insert-layer img x-layer 0 0)
-        (gimp-image-insert-layer img y-layer 0 0)
+        (set! x-layer (car(gimp-layer-copy gravure-layer)))
+        (set! y-layer (car(gimp-layer-copy gravure-layer)))
+        (gimp-image-insert-layer img x-layer -1 0)
+        (gimp-image-insert-layer img y-layer -1 0)
         
         ;bumpmap x and y layers
-        (plug-in-bump-map 1 img x-layer x-layer 180 45 2 0 0 0 0 TRUE FALSE 0)
-        (plug-in-bump-map 1 img y-layer y-layer  90 45 2 0 0 0 0 TRUE FALSE 0)
+        (let* ((filter (car (gimp-drawable-filter-new x-layer "gegl:bump-map" ""))))
+          (gimp-drawable-filter-configure filter LAYER-MODE-REPLACE 1.0 "azimuth" 180 "elevation" 45 "depth" 2 "compensate" TRUE "invert" FALSE "type" "linear")
+          (gimp-drawable-filter-set-aux-input filter "aux" x-layer)
+          (gimp-drawable-merge-filter x-layer filter))
+        (let* ((filter (car (gimp-drawable-filter-new y-layer "gegl:bump-map" ""))))
+          (gimp-drawable-filter-configure filter LAYER-MODE-REPLACE 1.0 "azimuth" 90 "elevation" 45 "depth" 2 "compensate" TRUE "invert" FALSE "type" "linear")
+          (gimp-drawable-filter-set-aux-input filter "aux" y-layer)
+          (gimp-drawable-merge-filter y-layer filter))
         
         ;displacement
-        (plug-in-displace 1 img image-layer strength strength TRUE TRUE x-layer y-layer 1)
+        (let* ((filter (car (gimp-drawable-filter-new image-layer "gegl:displace" ""))))
+          (gimp-drawable-filter-configure filter LAYER-MODE-REPLACE 1.0 "amount-x" strength "amount-y" strength "abyss-policy" "clamp")
+          (gimp-drawable-filter-set-aux-input filter "aux" x-layer)
+          (gimp-drawable-filter-set-aux-input filter "aux2" y-layer)
+          (gimp-drawable-merge-filter image-layer filter))
+
         
         ;hide top layers
         (gimp-item-set-visible x-layer FALSE)
         (gimp-item-set-visible y-layer FALSE)
         
         ;blend x-layer slightly
-        (gimp-layer-set-mode gravure-layer LAYER-MODE-OVERLAY)
+        (gimp-layer-set-mode gravure-layer LAYER-MODE-OVERLAY-LEGACY)
         (gimp-layer-set-opacity gravure-layer 80)
         
         ; tidy up

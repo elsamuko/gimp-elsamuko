@@ -46,7 +46,7 @@
              )
         
         ;add new layer
-        (gimp-image-insert-layer img borderlayer 0 -1)
+        (gimp-image-insert-layer img borderlayer -1 -1)
         (gimp-drawable-fill borderlayer FILL-TRANSPARENT)
         
         ;select rounded rectangle, distress and invert it
@@ -55,18 +55,19 @@
                                 (- owidth (* 2 thickness)) (- oheight (* 2 thickness))
                                 radius radius)
         (if (> granularity 0)
-            (script-fu-distress-selection img borderlayer 127 12 granularity smooth TRUE TRUE)
+            (script-fu-distress-selection img (vector borderlayer) 0.5 12 granularity smooth TRUE TRUE)
             )
         (gimp-selection-invert img)
         
         ;fill up with border color
         (gimp-context-set-foreground color)
-        (gimp-drawable-edit-bucket-fill borderlayer)
+        (gimp-drawable-edit-fill borderlayer FILL-FOREGROUND)
         (gimp-selection-none img)
         
         ;blur border
         (if (> motion 0)
-            (plug-in-mblur 1 img borderlayer 2 motion 0 (/ owidth 2) (/ oheight 2))
+            (gimp-drawable-merge-new-filter borderlayer "gegl:motion-blur-zoom" "" LAYER-MODE-REPLACE 1.0 "factor" (/ motion 256.0) "center-x" 0.5 "center-y" 0.5)
+
             )
         )
       )

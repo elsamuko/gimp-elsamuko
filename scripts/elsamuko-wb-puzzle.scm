@@ -24,7 +24,7 @@
 
 (define (elsamuko-wb-puzzle aimg adraw puzzlewidth puzzleheight feathervalue)
   (let* ((img (car (gimp-item-get-image adraw)))
-         (wblayer (car (gimp-layer-copy adraw FALSE)))
+         (wblayer (car (gimp-layer-copy adraw)))
          (owidth (car (gimp-image-get-width img)))
          (oheight (car (gimp-image-get-height img)))
          (itermaxX (/ owidth puzzlewidth))
@@ -51,7 +51,7 @@
     ;(gimp-context-set-background '(255 255 255))
     
     ;select rectangular blocks and auto white balance them
-    (gimp-image-insert-layer img wblayer 0 -1)
+    (gimp-image-insert-layer img wblayer -1 -1)
     
     (while (< iterwidth itermaxX)
            (while (< iterheight itermaxY)
@@ -59,7 +59,7 @@
                   (if (> feathervalue 0)
                       (gimp-selection-feather img feathervalue)
                       )
-                  (gimp-levels-stretch wblayer)
+                  (gimp-drawable-levels-stretch wblayer)
                   (set! iterheight (+ iterheight 1))
                   )
            (set! iterheight 0)
