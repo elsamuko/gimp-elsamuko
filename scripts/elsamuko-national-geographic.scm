@@ -162,17 +162,17 @@
     ;red
     (if(= tint 1)
        (begin
-         (gimp-drawable-colorize-hsl screenlayer   0 25 0)
-         (gimp-drawable-colorize-hsl overlaylayer  0 25 0)
-         (gimp-drawable-colorize-hsl overlaylayer2 0 25 0)
+         (gimp-drawable-colorize-hsl screenlayer   0 40 0)
+         (gimp-drawable-colorize-hsl overlaylayer  0 40 0)
+         (gimp-drawable-colorize-hsl overlaylayer2 0 40 0)
          )
        )
     ;blue
     (if(= tint 2)
        (begin
-         (gimp-drawable-colorize-hsl screenlayer   225 25 0)
-         (gimp-drawable-colorize-hsl overlaylayer  225 25 0)
-         (gimp-drawable-colorize-hsl overlaylayer2 225 25 0)
+         (gimp-drawable-colorize-hsl screenlayer   225 40 0)
+         (gimp-drawable-colorize-hsl overlaylayer  225 40 0)
+         (gimp-drawable-colorize-hsl overlaylayer2 225 40 0)
          )
        )
     
