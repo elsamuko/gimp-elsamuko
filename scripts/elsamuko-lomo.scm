@@ -181,8 +181,9 @@
     (gimp-item-set-name draw "Process Copy")
     
     ; adjust contrast, saturation 
-    (gimp-drawable-brightness-contrast draw 0 (/ acon 127.0))
-    (gimp-drawable-hue-saturation draw HUE-RANGE-ALL 0 0 asat 0)
+    (gimp-drawable-merge-new-filter draw "gegl:brightness-contrast" "" LAYER-MODE-REPLACE 1.0 "contrast" (+ 1.0 (/ acon 256.0)) "brightness" 0.0)
+    ;(gimp-drawable-hue-saturation draw HUE-RANGE-ALL 0 0 asat 0)
+    (gimp-drawable-merge-new-filter draw "gimp:hue-saturation" "" LAYER-MODE-REPLACE 1.0 "range" HUE-RANGE-ALL "saturation" (/ asat 100))
     
     ;wide angle lens distortion
     (if (> wide_angle 0) 
@@ -310,10 +311,6 @@
                   (gimp-drawable-curves-spline draw  HISTOGRAM-GREEN  #(0 0 0.25490196078431371 0.18823529411764706 0.792156862745098 0.84313725490196079 1 1))
                   (gimp-drawable-curves-spline draw  HISTOGRAM-GREEN  #(0 0.082352941176470587 1 1))
                   (gimp-drawable-curves-spline draw  HISTOGRAM-BLUE   #(0 0 0.26666666666666666 0.34901960784313724 0.63529411764705879 0.80784313725490198 0.91764705882352937 1))
-                  (gimp-drawable-levels draw HISTOGRAM-VALUE
-                                        (/ 25 255.0) 1.0 TRUE ;input
-                                        1.25   ;gamma
-                                        0.0 1.0 TRUE) ;output
                   )
        )
     
