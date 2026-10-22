@@ -232,6 +232,48 @@
     )
   )
 
+(define (elsamuko-technicolor-3-color-batch pattern
+                                            redpart   ;redintensity
+                                            greenpart ;greenintensity
+                                            bluepart  ;blueintensity
+                                            cyanfill magentafill yellowfill
+                                            sharpen
+                                            stretch
+                                            retro
+                                            extra)
+  (gimp-message (string-append "Pattern: " pattern))
+  (let* ((filelist (car (file-glob pattern 1))))
+    (while (not (null? filelist))
+           (let* ((filename (car filelist))
+                  (fileparts (strbreakup filename "."))
+                  (img (car (gimp-file-load RUN-NONINTERACTIVE filename)))
+                  (adraw (vector-ref (car (gimp-image-get-selected-drawables img)) 0))
+                  )
+             (gimp-message (string-append "Filename: " filename))
+
+             (gimp-message "Calling elsamuko-technicolor-3-color")
+             (elsamuko-technicolor-3-color img adraw 
+                                           redpart   ;redintensity
+                                           greenpart ;greenintensity
+                                           bluepart  ;blueintensity
+                                           cyanfill magentafill yellowfill
+                                           sharpen
+                                           stretch
+                                           retro
+                                           extra)
+
+             (gimp-image-merge-visible-layers img EXPAND-AS-NECESSARY)
+             (set! adraw (vector-ref (car (gimp-image-get-selected-drawables img)) 0))
+
+             (gimp-message "Saving")
+             (gimp-file-save RUN-NONINTERACTIVE img filename -1)
+             (gimp-image-delete img)
+             (set! filelist (cdr filelist))
+             )
+           )
+    )
+  )
+
 (script-fu-register "elsamuko-technicolor-3-color"
                     _"_Technicolor 3 Color"
                     "Simulating Technicolor Film.
