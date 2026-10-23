@@ -33,12 +33,12 @@
                           Overlay
                           )
   
-  (let* ((drawable-width (car (gimp-drawable-width drw)))
-         (drawable-height (car (gimp-drawable-height drw)))
+  (let* ((drawable-width (car (gimp-drawable-get-width drw)))
+         (drawable-height (car (gimp-drawable-get-height drw)))
          (cyan-layer 0)
          (magenta-layer 0)
          (yellow-layer 0)
-         (overlay-layer (car (gimp-layer-copy drw FALSE)))
+         (overlay-layer (car (gimp-layer-copy drw)))
          )
     
     ;Begin
@@ -51,34 +51,35 @@
     ;Bleach Bypass
     (if(= Overlay TRUE)
        (begin
-         (gimp-image-insert-layer img overlay-layer 0 -1)
-         (gimp-desaturate-full overlay-layer DESATURATE-LUMINOSITY)
-         (plug-in-gauss TRUE img overlay-layer 1 1 TRUE)
-         (plug-in-unsharp-mask 1 img overlay-layer 1 1 0)
-         (gimp-layer-set-mode overlay-layer OVERLAY-MODE)
+         (gimp-image-insert-layer img overlay-layer -1 -1)
+         (gimp-drawable-desaturate overlay-layer DESATURATE-LUMA)
+         (gimp-drawable-merge-new-filter overlay-layer "gegl:gaussian-blur" "" LAYER-MODE-REPLACE 1.0 "std-dev-x" 0.32 "std-dev-y" 0.32 "abyss-policy" "clamp")
+         (gimp-drawable-merge-new-filter overlay-layer "gegl:unsharp-mask" "" LAYER-MODE-REPLACE 1.0 "std-dev" 1 "scale" 1 "threshold" 0)
+
+         (gimp-layer-set-mode overlay-layer LAYER-MODE-OVERLAY-LEGACY)
          (gimp-item-set-name overlay-layer "Bleach Bypass")
          )
        )
     
     ;Yellow Layer
-    (set! yellow-layer (car (gimp-layer-new img drawable-width drawable-height RGB "Yellow" 100  MULTIPLY-MODE)))	
-    (gimp-image-insert-layer img yellow-layer 0 -1)
+    (set! yellow-layer (car (gimp-layer-new img "Yellow" drawable-width drawable-height RGB 100  LAYER-MODE-MULTIPLY-LEGACY)))
+    (gimp-image-insert-layer img yellow-layer -1 -1)
     (gimp-context-set-background '(251 242 163) )
-    (gimp-drawable-fill yellow-layer BACKGROUND-FILL)
+    (gimp-drawable-fill yellow-layer FILL-BACKGROUND)
     (gimp-layer-set-opacity yellow-layer VarYellow)
     
     ;Magenta Layer
-    (set! magenta-layer (car (gimp-layer-new img drawable-width drawable-height RGB "Magenta" 100  SCREEN-MODE)))	
-    (gimp-image-insert-layer img magenta-layer 0 -1)
+    (set! magenta-layer (car (gimp-layer-new img "Magenta" drawable-width drawable-height RGB 100  LAYER-MODE-SCREEN-LEGACY)))
+    (gimp-image-insert-layer img magenta-layer -1 -1)
     (gimp-context-set-background '(232 101 179) )
-    (gimp-drawable-fill magenta-layer BACKGROUND-FILL)
+    (gimp-drawable-fill magenta-layer FILL-BACKGROUND)
     (gimp-layer-set-opacity magenta-layer VarMagenta)
     
     ;Cyan Layer 
-    (set! cyan-layer (car (gimp-layer-new img drawable-width drawable-height RGB "Cyan" 100  SCREEN-MODE)))	
-    (gimp-image-insert-layer img cyan-layer 0 -1)
+    (set! cyan-layer (car (gimp-layer-new img "Cyan" drawable-width drawable-height RGB 100  LAYER-MODE-SCREEN-LEGACY)))
+    (gimp-image-insert-layer img cyan-layer -1 -1)
     (gimp-context-set-background '(9 73 233) )
-    (gimp-drawable-fill cyan-layer BACKGROUND-FILL)
+    (gimp-drawable-fill cyan-layer FILL-BACKGROUND)
     (gimp-layer-set-opacity cyan-layer VarCyan)
     
     ;End

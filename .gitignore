@@ -9,6 +9,8 @@
 !*.jpg
 
 !*.scm
+!*.sh
+!*.py
 
 !*.pro
 
@@ -16,3 +18,6 @@
 !*.c
 !*.cpp
 !*.hpp
+
+# test images
+tests/**/*.jpg

@@ -23,8 +23,8 @@
 
 (define (elsamuko-escape-lines aimg adraw x0 y0 phi1 phi2 dphi1 number length roffset randomness xoffset yoffset aoffset color)
   (let* ((img (car (gimp-item-get-image adraw)))
-         (owidth (car (gimp-image-width img)))
-         (oheight (car (gimp-image-height img)))
+         (owidth (car (gimp-image-get-width img)))
+         (oheight (car (gimp-image-get-height img)))
          (coord (cons-array 4 'double))
          (iter 0)
          (x1 x0)
@@ -40,12 +40,12 @@
     ;init
     (define (triangle_array x0 y0 x1 y1 x2 y2)
       (let* ((n_array (cons-array 6 'double)))
-        (aset n_array 0 x0 )
-        (aset n_array 1 y0 )
-        (aset n_array 2 x1)
-        (aset n_array 3 y1)
-        (aset n_array 4 x2)
-        (aset n_array 5 y2)
+        (vector-set! n_array 0 x0 )
+        (vector-set! n_array 1 y0 )
+        (vector-set! n_array 2 x1)
+        (vector-set! n_array 3 y1)
+        (vector-set! n_array 4 x2)
+        (vector-set! n_array 5 y2)
         n_array)
       )
     
@@ -63,7 +63,7 @@
     (while (< iter number)
            
            (if (> randomness 0)
-               (set! roffiter  (+ roffset (- (modulo (rand) randomness) (/ randomness 2)))))
+               (set! roffiter  (+ roffset (- (modulo (random 1000000) randomness) (/ randomness 2)))))
            
            (set! x1 (+ xoffset x0 (* roffiter (cos (/ (* (+ aoffset phi1 (/ dphi1 2)) *pi*) 180)) )))
            (set! y1 (+ yoffset y0 (* roffiter (sin (/ (* (+ aoffset phi1 (/ dphi1 2)) *pi*) 180)) )))
@@ -72,7 +72,7 @@
            (set! x3 (+ x0 (* length  (cos (/ (* (+ phi1 dphi1)       *pi*) 180)) )))
            (set! y3 (+ y0 (* length  (sin (/ (* (+ phi1 dphi1)       *pi*) 180)) )))
            
-           (gimp-image-select-polygon img CHANNEL-OP-ADD 6
+           (gimp-image-select-polygon img CHANNEL-OP-ADD
                              (triangle_array x1 y1
                                              x2 y2
                                              x3 y3)) 
@@ -81,7 +81,7 @@
            )
     
     ;fill lines
-    (gimp-edit-bucket-fill adraw FG-BUCKET-FILL NORMAL-MODE 100 0 FALSE 0 0)    
+    (gimp-drawable-edit-fill adraw FILL-FOREGROUND)
     
     ; tidy up
     (gimp-selection-none img)

@@ -23,21 +23,21 @@
                                   cast preserve
                                   yellow-hues red-hues)
   (let* ((img (car (gimp-item-get-image adraw)))
-         (owidth (car (gimp-image-width img)))
-         (oheight (car (gimp-image-height img)))
+         (owidth (car (gimp-image-get-width img)))
+         (oheight (car (gimp-image-get-height img)))
          
-         (hue-layer     (car (gimp-layer-copy adraw FALSE)))
-         (bw-layer      (car (gimp-layer-copy adraw FALSE)))
-         (extract-layer (car (gimp-layer-copy adraw FALSE)))
+         (hue-layer     (car (gimp-layer-copy adraw)))
+         (bw-layer      (car (gimp-layer-copy adraw)))
+         (extract-layer (car (gimp-layer-copy adraw)))
          
          (cast-layer (car (gimp-layer-new img
+                                          "Blue Cast"
                                           owidth 
                                           oheight
                                           1
-                                          "Blue Cast" 
                                           40 
-                                          MULTIPLY-MODE)))
-         (cast-layer-mask (car (gimp-layer-create-mask cast-layer ADD-WHITE-MASK)))
+                                          LAYER-MODE-MULTIPLY-LEGACY)))
+         (cast-layer-mask (car (gimp-layer-create-mask cast-layer ADD-MASK-WHITE)))
          (preserve-layer 0)
          (preserve-layer-mask 0)
          )
@@ -50,48 +50,51 @@
         )
 
     ;add hue layer
-    (gimp-image-insert-layer img hue-layer 0 -1)
+    (gimp-image-insert-layer img hue-layer -1 -1)
     (gimp-item-set-name hue-layer "Hue: Y->G, R->Y")
     
     ;create layer mask for the cast layer
-    (gimp-image-insert-layer img bw-layer 0 -1)
+    (gimp-image-insert-layer img bw-layer -1 -1)
     (gimp-item-set-name bw-layer "B/W Filter")
-    (plug-in-colors-channel-mixer 1 img bw-layer TRUE
-                                  -0.466 0.133 1.333  ;R
-                                  0      0     0      ;G
-                                  0      0     0 )    ;B)
-    (gimp-invert bw-layer)
+    (gimp-drawable-merge-new-filter bw-layer "gegl:mono-mixer" "" LAYER-MODE-REPLACE 1.0
+                                    "red" -0.466 "green" 0.133 "blue" 1.333  ;R
+                                    )
+    (gimp-drawable-invert bw-layer FALSE)
     (gimp-item-set-visible bw-layer FALSE)
     
     ;preserve yellow
-    (gimp-image-insert-layer img extract-layer 0 -1)
+    (gimp-image-insert-layer img extract-layer -1 -1)
     (gimp-item-set-name extract-layer "Extract")
-    (gimp-layer-set-mode extract-layer GRAIN-EXTRACT-MODE)
-    (plug-in-colortoalpha 1 img extract-layer preserve)
+    (gimp-layer-set-mode extract-layer LAYER-MODE-GRAIN-EXTRACT-LEGACY)
+    (gimp-layer-add-alpha extract-layer)
+    (gimp-drawable-merge-new-filter extract-layer "gegl:color-to-alpha" "" LAYER-MODE-REPLACE 1.0 "color" preserve)
     (gimp-edit-copy-visible img)
     (set! preserve-layer (car (gimp-layer-new-from-visible img img "Preserve Y")))
-    (gimp-image-insert-layer img preserve-layer 0 0)
-    (gimp-brightness-contrast preserve-layer -90 90)
+    (gimp-image-insert-layer img preserve-layer -1 0)
+    ;brightness -90, contrast 90 as perceptual levels (GIMP 3 brightness-contrast works in linear light)
+    (gimp-drawable-merge-new-filter preserve-layer "gimp:levels" "" LAYER-MODE-REPLACE 1.0 "trc" TRC-NON-LINEAR "low-input" 0.594 "high-input" 0.955)
+
+
     
-    (set! preserve-layer-mask (car (gimp-layer-create-mask preserve-layer ADD-COPY-MASK)))
+    (set! preserve-layer-mask (car (gimp-layer-create-mask preserve-layer ADD-MASK-COPY)))
     (gimp-layer-add-mask preserve-layer preserve-layer-mask)
     (gimp-item-set-visible extract-layer FALSE)
     
     ;add cast layer
-    (gimp-image-insert-layer img cast-layer 0 -1)
+    (gimp-image-insert-layer img cast-layer -1 -1)
     (gimp-image-raise-item-to-top img preserve-layer)
     (gimp-context-set-foreground cast)
     (gimp-selection-all img)
-    (gimp-edit-bucket-fill cast-layer FG-BUCKET-FILL NORMAL-MODE 100 0 FALSE 0 0)
+    (gimp-drawable-edit-fill cast-layer FILL-FOREGROUND)
     
-    (gimp-edit-copy bw-layer)
+    (gimp-edit-copy (vector bw-layer))
     (gimp-layer-add-mask cast-layer cast-layer-mask)
-    (gimp-floating-sel-anchor (car (gimp-edit-paste cast-layer-mask TRUE)))
+    (gimp-floating-sel-anchor (vector-ref (car (gimp-edit-paste cast-layer-mask TRUE)) 0))
     (gimp-selection-none img)
     
     ;colorize hue layer
-    (gimp-hue-saturation hue-layer YELLOW-HUES yellow-hues 0 0)
-    (gimp-hue-saturation hue-layer RED-HUES red-hues 0 0)
+    (gimp-drawable-hue-saturation hue-layer HUE-RANGE-YELLOW yellow-hues 0 0 0)
+    (gimp-drawable-hue-saturation hue-layer HUE-RANGE-RED red-hues 0 0 0)
 
     ;remove unneccessary layers
     (gimp-image-remove-layer img extract-layer)

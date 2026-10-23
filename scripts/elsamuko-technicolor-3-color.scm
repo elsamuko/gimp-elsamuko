@@ -32,45 +32,45 @@
                                       retro
                                       extra)
   (let* ((img          (car (gimp-item-get-image adraw)))
-         (owidth       (car (gimp-image-width img)))
-         (oheight      (car (gimp-image-height img)))
-         (sharpenlayer (car (gimp-layer-copy adraw FALSE)))
+         (owidth       (car (gimp-image-get-width img)))
+         (oheight      (car (gimp-image-get-height img)))
+         (sharpenlayer (car (gimp-layer-copy adraw)))
          (floatingsel  0)
          
-         (redlayer     (car (gimp-layer-copy adraw FALSE)))
-         (greenlayer   (car (gimp-layer-copy adraw FALSE)))
-         (bluelayer    (car (gimp-layer-copy adraw FALSE)))
-         (tmplayer     (car (gimp-layer-copy adraw FALSE)))
+         (redlayer     (car (gimp-layer-copy adraw)))
+         (greenlayer   (car (gimp-layer-copy adraw)))
+         (bluelayer    (car (gimp-layer-copy adraw)))
+         (tmplayer     (car (gimp-layer-copy adraw)))
          (extralayer  0)
          (purplelayer  (car (gimp-layer-new img
+                                            "Retro Layer"
                                             owidth 
                                             oheight
                                             1
-                                            "Retro Layer" 
                                             100 
-                                            SUBTRACT-MODE)))
+                                            LAYER-MODE-SUBTRACT-LEGACY)))
          
          ;         (redmultiplylayer   (car (gimp-layer-new img
+         ;                                                  "Red Multiply"
          ;                                                  owidth 
          ;                                                  oheight
          ;                                                  1
-         ;                                                  "Red Multiply" 
          ;                                                  redintensity
-         ;                                                  MULTIPLY-MODE)))
+         ;                                                  LAYER-MODE-MULTIPLY-LEGACY)))
          ;         (greenmultiplylayer (car (gimp-layer-new img
+         ;                                                  "Green Multiply"
          ;                                                  owidth 
          ;                                                  oheight
          ;                                                  1
-         ;                                                  "Green Multiply" 
          ;                                                  greenintensity
-         ;                                                  MULTIPLY-MODE)))
+         ;                                                  LAYER-MODE-MULTIPLY-LEGACY)))
          ;         (bluemultiplylayer  (car (gimp-layer-new img
+         ;                                                  "Blue Multiply"
          ;                                                  owidth 
          ;                                                  oheight
          ;                                                  1
-         ;                                                  "Blue Multiply" 
          ;                                                  blueintensity
-         ;                                                  MULTIPLY-MODE)))
+         ;                                                  LAYER-MODE-MULTIPLY-LEGACY)))
          
          ;decomposing filter colors, you may change these
          (red-R   redpart)
@@ -98,12 +98,12 @@
     ;extra color layer
     (if(= extra 1)
        (begin
-         (gimp-image-insert-layer img tmplayer 0 0)
-         (gimp-desaturate-full tmplayer DESATURATE-LIGHTNESS)
-         (gimp-layer-set-mode tmplayer GRAIN-EXTRACT-MODE)
+         (gimp-image-insert-layer img tmplayer -1 0)
+         (gimp-drawable-desaturate tmplayer DESATURATE-LIGHTNESS)
+         (gimp-layer-set-mode tmplayer LAYER-MODE-GRAIN-EXTRACT-LEGACY)
          (gimp-edit-copy-visible img)
          (set! extralayer (car (gimp-layer-new-from-visible img img "Extra Color") ))
-         (gimp-image-insert-layer img extralayer 0 0)
+         (gimp-image-insert-layer img extralayer -1 0)
          (gimp-item-set-visible extralayer FALSE)
          (gimp-item-set-visible tmplayer FALSE)
          )
@@ -118,60 +118,56 @@
     (gimp-item-set-name redlayer   "Red -> Cyan")
     
     
-    (gimp-image-insert-layer img greenlayer 0 -1)
+    (gimp-image-insert-layer img greenlayer -1 -1)
     ;(gimp-image-insert-layer img greenmultiplylayer -1)
-    ;(gimp-drawable-fill greenmultiplylayer TRANSPARENT-FILL)
+    ;(gimp-drawable-fill greenmultiplylayer FILL-TRANSPARENT)
     
-    (gimp-image-insert-layer img bluelayer  0 -1)
+    (gimp-image-insert-layer img bluelayer  -1 -1)
     ;(gimp-image-insert-layer img bluemultiplylayer  -1)
-    ;(gimp-drawable-fill bluemultiplylayer  TRANSPARENT-FILL)
+    ;(gimp-drawable-fill bluemultiplylayer  FILL-TRANSPARENT)
     
-    (gimp-image-insert-layer img redlayer   0 -1)
+    (gimp-image-insert-layer img redlayer   -1 -1)
     ;(gimp-image-insert-layer img redmultiplylayer   -1)
-    ;(gimp-drawable-fill redmultiplylayer   TRANSPARENT-FILL)
+    ;(gimp-drawable-fill redmultiplylayer   FILL-TRANSPARENT)
     
     
-    (plug-in-colors-channel-mixer 1 img redlayer TRUE
-                                  red-R red-G red-B ;R
-                                  0 0 0 ;G
-                                  0 0 0 ;B
-                                  )
-    (plug-in-colors-channel-mixer 1 img greenlayer TRUE
-                                  green-R green-G green-B ;R
-                                  0 0 0 ;G
-                                  0 0 0 ;B
-                                  )
-    (plug-in-colors-channel-mixer 1 img bluelayer TRUE
-                                  blue-R blue-G blue-B ;R
-                                  0 0 0 ;G
-                                  0 0 0 ;B
-                                  )
+    (gimp-drawable-merge-new-filter redlayer "gegl:mono-mixer" "" LAYER-MODE-REPLACE 1.0
+                                    "red" red-R "green" red-G "blue" red-B ;R
+                                    )
+    (gimp-drawable-merge-new-filter greenlayer "gegl:mono-mixer" "" LAYER-MODE-REPLACE 1.0
+                                    "red" green-R "green" green-G "blue" green-B ;R
+                                    )
+    (gimp-drawable-merge-new-filter bluelayer "gegl:mono-mixer" "" LAYER-MODE-REPLACE 1.0
+                                    "red" blue-R "green" blue-G "blue" blue-B ;R
+                                    )
     
     ;stretch contrast of filter layers
     (if(= stretch TRUE)
        (begin
          (gimp-selection-all img)
-         (gimp-levels-stretch redlayer)
-         (gimp-levels-stretch greenlayer)
-         (gimp-levels-stretch bluelayer)
+         (gimp-drawable-levels-stretch redlayer)
+         (gimp-drawable-levels-stretch greenlayer)
+         (gimp-drawable-levels-stretch bluelayer)
          )
        )
     
     ;colorize filter layers back
     (gimp-selection-all img)
+    (gimp-context-set-paint-mode LAYER-MODE-SCREEN-LEGACY)
     
     (gimp-context-set-foreground cyanfill)
-    (gimp-edit-bucket-fill redlayer   FG-BUCKET-FILL SCREEN-MODE 100 0 FALSE 0 0)
+    (gimp-drawable-edit-fill redlayer   FILL-FOREGROUND)
     
     (gimp-context-set-foreground magentafill)
-    (gimp-edit-bucket-fill greenlayer FG-BUCKET-FILL SCREEN-MODE 100 0 FALSE 0 0)
+    (gimp-drawable-edit-fill greenlayer FILL-FOREGROUND)
     
     (gimp-context-set-foreground yellowfill)
-    (gimp-edit-bucket-fill bluelayer  FG-BUCKET-FILL SCREEN-MODE 100 0 FALSE 0 0)
+    (gimp-drawable-edit-fill bluelayer  FILL-FOREGROUND)
+    (gimp-context-set-paint-mode LAYER-MODE-NORMAL-LEGACY)
     
-    (gimp-layer-set-mode redlayer   MULTIPLY-MODE)
-    (gimp-layer-set-mode greenlayer MULTIPLY-MODE)
-    (gimp-layer-set-mode bluelayer  MULTIPLY-MODE)
+    (gimp-layer-set-mode redlayer   LAYER-MODE-MULTIPLY-LEGACY)
+    (gimp-layer-set-mode greenlayer LAYER-MODE-MULTIPLY-LEGACY)
+    (gimp-layer-set-mode bluelayer  LAYER-MODE-MULTIPLY-LEGACY)
     
     
     ;    ;add multiply layers
@@ -192,14 +188,14 @@
     ;sharpness + contrast layer
     (if(> sharpen 0)
        (begin
-         (gimp-image-insert-layer img sharpenlayer 0 0)
-         (gimp-desaturate-full sharpenlayer DESATURATE-LIGHTNESS)
-         (plug-in-unsharp-mask 1 img sharpenlayer 5 1 0)
-         (gimp-layer-set-mode sharpenlayer OVERLAY-MODE)
+         (gimp-image-insert-layer img sharpenlayer -1 0)
+         (gimp-drawable-desaturate sharpenlayer DESATURATE-LIGHTNESS)
+         (gimp-drawable-merge-new-filter sharpenlayer "gegl:unsharp-mask" "" LAYER-MODE-REPLACE 1.0 "std-dev" 5 "scale" 1 "threshold" 0)
+         (gimp-layer-set-mode sharpenlayer LAYER-MODE-OVERLAY-LEGACY)
          (gimp-layer-set-opacity sharpenlayer sharpen)
          ;(set! floatingsel (car (gimp-layer-create-mask sharpenlayer 5)))
          ;(gimp-layer-add-mask sharpenlayer floatingsel)
-         ;(gimp-invert floatingsel)
+         ;(gimp-drawable-invert floatingsel FALSE)
          )
        )
     
@@ -207,7 +203,7 @@
     (if(= extra 1)
        (begin
          (gimp-image-raise-item-to-top img extralayer)
-         (gimp-layer-set-mode extralayer GRAIN-MERGE-MODE)
+         (gimp-layer-set-mode extralayer LAYER-MODE-GRAIN-MERGE-LEGACY)
          (gimp-item-set-visible extralayer TRUE)
          )
        )
@@ -215,11 +211,11 @@
     ;add 'retro' layer
     (if(= retro TRUE)
        (begin
-         (gimp-image-insert-layer img purplelayer 0 -1)
-         (gimp-drawable-fill purplelayer TRANSPARENT-FILL)
+         (gimp-image-insert-layer img purplelayer -1 -1)
+         (gimp-drawable-fill purplelayer FILL-TRANSPARENT)
          (gimp-context-set-foreground '(62 25 55))
          (gimp-selection-all img)
-         (gimp-edit-bucket-fill purplelayer FG-BUCKET-FILL NORMAL-MODE 100 0 FALSE 0 0)
+         (gimp-drawable-edit-fill purplelayer FILL-FOREGROUND)
          (gimp-selection-none img)
          (gimp-layer-set-opacity purplelayer 80)
          (gimp-layer-set-opacity redlayer 80)
@@ -233,6 +229,48 @@
     (gimp-image-undo-group-end img)
     (gimp-displays-flush)
     (gimp-context-pop)
+    )
+  )
+
+(define (elsamuko-technicolor-3-color-batch pattern
+                                            redpart   ;redintensity
+                                            greenpart ;greenintensity
+                                            bluepart  ;blueintensity
+                                            cyanfill magentafill yellowfill
+                                            sharpen
+                                            stretch
+                                            retro
+                                            extra)
+  (gimp-message (string-append "Pattern: " pattern))
+  (let* ((filelist (car (file-glob pattern 1))))
+    (while (not (null? filelist))
+           (let* ((filename (car filelist))
+                  (fileparts (strbreakup filename "."))
+                  (img (car (gimp-file-load RUN-NONINTERACTIVE filename)))
+                  (adraw (vector-ref (car (gimp-image-get-selected-drawables img)) 0))
+                  )
+             (gimp-message (string-append "Filename: " filename))
+
+             (gimp-message "Calling elsamuko-technicolor-3-color")
+             (elsamuko-technicolor-3-color img adraw 
+                                           redpart   ;redintensity
+                                           greenpart ;greenintensity
+                                           bluepart  ;blueintensity
+                                           cyanfill magentafill yellowfill
+                                           sharpen
+                                           stretch
+                                           retro
+                                           extra)
+
+             (gimp-image-merge-visible-layers img EXPAND-AS-NECESSARY)
+             (set! adraw (vector-ref (car (gimp-image-get-selected-drawables img)) 0))
+
+             (gimp-message "Saving")
+             (gimp-file-save RUN-NONINTERACTIVE img filename -1)
+             (gimp-image-delete img)
+             (set! filelist (cdr filelist))
+             )
+           )
     )
   )
 

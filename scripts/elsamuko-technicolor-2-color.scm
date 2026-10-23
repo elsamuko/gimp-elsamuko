@@ -29,18 +29,18 @@
 
 (define (elsamuko-technicolor-2-color aimg adraw redpart greenpart cyanfill redfill yellowfill sharpen)
   (let* ((img          (car (gimp-item-get-image adraw)))
-         (owidth       (car (gimp-image-width img)))
-         (oheight      (car (gimp-image-height img)))
-         (sharpenlayer (car (gimp-layer-copy adraw FALSE)))
-         (redlayer     (car (gimp-layer-copy adraw FALSE)))
-         (cyanlayer    (car (gimp-layer-copy adraw FALSE)))
+         (owidth       (car (gimp-image-get-width img)))
+         (oheight      (car (gimp-image-get-height img)))
+         (sharpenlayer (car (gimp-layer-copy adraw)))
+         (redlayer     (car (gimp-layer-copy adraw)))
+         (cyanlayer    (car (gimp-layer-copy adraw)))
          (yellowlayer  (car (gimp-layer-new img
+                                            "Yellow"
                                             owidth 
                                             oheight
                                             1
-                                            "Yellow" 
                                             30 ;opacity
-                                            OVERLAY-MODE)))
+                                            LAYER-MODE-OVERLAY-LEGACY)))
          ;decomposing filter colors, you may change these
          (red-R redpart)
          (red-G (/ (- 1 redpart) 2) )
@@ -64,42 +64,40 @@
     (gimp-item-set-name cyanlayer "Cyan")
     (gimp-item-set-name redlayer "Red")
     
-    (gimp-image-insert-layer img redlayer 0 -1)
-    (gimp-image-insert-layer img cyanlayer 0 -1)
+    (gimp-image-insert-layer img redlayer -1 -1)
+    (gimp-image-insert-layer img cyanlayer -1 -1)
     
-    (plug-in-colors-channel-mixer 1 img redlayer TRUE
-                                  red-R red-G red-B ;R
-                                  0 0 0 ;G
-                                  0 0 0 ;B
-                                  )
-    (plug-in-colors-channel-mixer 1 img cyanlayer TRUE
-                                  cyan-R cyan-G cyan-B ;R
-                                  0 0 0 ;G
-                                  0 0 0 ;B
-                                  )
+    (gimp-drawable-merge-new-filter redlayer "gegl:mono-mixer" "" LAYER-MODE-REPLACE 1.0
+                                    "red" red-R "green" red-G "blue" red-B ;R
+                                    )
+    (gimp-drawable-merge-new-filter cyanlayer "gegl:mono-mixer" "" LAYER-MODE-REPLACE 1.0
+                                    "red" cyan-R "green" cyan-G "blue" cyan-B ;R
+                                    )
     
     ;colorize filter layers back
     (gimp-context-set-foreground cyanfill)
     (gimp-context-set-background redfill)
     
     (gimp-selection-all img)
-    (gimp-edit-bucket-fill redlayer FG-BUCKET-FILL SCREEN-MODE 100 0 FALSE 0 0)
-    (gimp-edit-bucket-fill cyanlayer BG-BUCKET-FILL SCREEN-MODE 100 0 FALSE 0 0)
+    (gimp-context-set-paint-mode LAYER-MODE-SCREEN-LEGACY)
+    (gimp-drawable-edit-fill redlayer FILL-FOREGROUND)
+    (gimp-drawable-edit-fill cyanlayer FILL-BACKGROUND)
+    (gimp-context-set-paint-mode LAYER-MODE-NORMAL-LEGACY)
     
-    (gimp-layer-set-mode cyanlayer MULTIPLY-MODE)
+    (gimp-layer-set-mode cyanlayer LAYER-MODE-MULTIPLY-LEGACY)
     
     ;add yellow layer
-    (gimp-image-insert-layer img yellowlayer 0 -1)
+    (gimp-image-insert-layer img yellowlayer -1 -1)
     (gimp-context-set-foreground yellowfill)
-    (gimp-edit-bucket-fill yellowlayer FG-BUCKET-FILL NORMAL-MODE 100 0 FALSE 0 0)
+    (gimp-drawable-edit-fill yellowlayer FILL-FOREGROUND)
     
     ;sharpness + contrast layer
     (if(= sharpen TRUE)
        (begin
-         (gimp-image-insert-layer img sharpenlayer 0 -1)
-         (gimp-desaturate-full sharpenlayer DESATURATE-LIGHTNESS)
-         (plug-in-unsharp-mask 1 img sharpenlayer 5 1 0)
-         (gimp-layer-set-mode sharpenlayer OVERLAY-MODE)
+         (gimp-image-insert-layer img sharpenlayer -1 -1)
+         (gimp-drawable-desaturate sharpenlayer DESATURATE-LIGHTNESS)
+         (gimp-drawable-merge-new-filter sharpenlayer "gegl:unsharp-mask" "" LAYER-MODE-REPLACE 1.0 "std-dev" 5 "scale" 1 "threshold" 0)
+         (gimp-layer-set-mode sharpenlayer LAYER-MODE-OVERLAY-LEGACY)
          (gimp-layer-set-opacity sharpenlayer 40)
          )
        )
@@ -119,12 +117,12 @@
                                             yellowfill_R yellowfill_G yellowfill_B
                                             sharpen)
   (gimp-message (string-append "Pattern: " pattern))
-  (let* ((filelist (cadr (file-glob pattern 1))))
+  (let* ((filelist (car (file-glob pattern 1))))
     (while (not (null? filelist))
            (let* ((filename (car filelist))
                   (fileparts (strbreakup filename "."))
-                  (img (car (gimp-file-load RUN-NONINTERACTIVE filename filename)))
-                  (adraw (car (gimp-image-get-active-drawable img)))
+                  (img (car (gimp-file-load RUN-NONINTERACTIVE filename)))
+                  (adraw (vector-ref (car (gimp-image-get-selected-drawables img)) 0))
                   )
              (gimp-message (string-append "Filename: " filename))
 
@@ -136,12 +134,13 @@
                                            sharpen)
 
              (gimp-image-merge-visible-layers img EXPAND-AS-NECESSARY)
-             (set! adraw (car (gimp-image-get-active-drawable img)))
+             (set! adraw (vector-ref (car (gimp-image-get-selected-drawables img)) 0))
 
              (gimp-message "Saving")
              (if (= overwrite TRUE)
-                 (file-jpeg-save RUN-NONINTERACTIVE img adraw filename filename quality 0 1 0 "" 0 1 0 1)
-                 (file-jpeg-save RUN-NONINTERACTIVE img adraw (string-append (car fileparts) "-Technicolor2.jpg") (string-append (car fileparts) "-Technicolor2.jpg") quality 0 1 0 "" 0 1 0 1))
+                 (file-jpeg-export #:run-mode RUN-NONINTERACTIVE #:image img #:file filename #:quality quality #:optimize TRUE)
+                 (file-jpeg-export #:run-mode RUN-NONINTERACTIVE #:image img #:file (string-append (car fileparts) "-Technicolor2.jpg") #:quality quality #:optimize TRUE))
+
              (gimp-image-delete img)
              (set! filelist (cdr filelist))
              )

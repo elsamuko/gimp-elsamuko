@@ -26,49 +26,49 @@
                             redtint grain
                             edge extra-dark)
   (let* ((img (car (gimp-item-get-image adraw)))
-         (owidth (car (gimp-image-width img)))
-         (oheight (car (gimp-image-height img)))
-         (desat-layer (car (gimp-layer-copy adraw FALSE)))
-         (multiply-layer (car (gimp-layer-copy adraw FALSE)))
-         (multiply-layer2 (car (gimp-layer-copy adraw FALSE)))
-         (multiply-layer2-mask (car (gimp-layer-create-mask multiply-layer2 ADD-WHITE-MASK)))
-         (edge-layer (car (gimp-layer-copy adraw FALSE)))
+         (owidth (car (gimp-image-get-width img)))
+         (oheight (car (gimp-image-get-height img)))
+         (desat-layer (car (gimp-layer-copy adraw)))
+         (multiply-layer (car (gimp-layer-copy adraw)))
+         (multiply-layer2 (car (gimp-layer-copy adraw)))
+         (multiply-layer2-mask (car (gimp-layer-create-mask multiply-layer2 ADD-MASK-WHITE)))
+         (edge-layer (car (gimp-layer-copy adraw)))
          (red-layer  0)
-         (overlay-layer1 (car (gimp-layer-copy adraw FALSE)))         
-         (overlay-layer2 (car (gimp-layer-copy adraw FALSE)))         
+         (overlay-layer1 (car (gimp-layer-copy adraw)))         
+         (overlay-layer2 (car (gimp-layer-copy adraw)))         
          (yellow-layer (car (gimp-layer-new img
+                                            "Yellow Multiply"
                                             owidth 
                                             oheight
                                             RGBA-IMAGE
-                                            "Yellow Multiply" 
                                             10 
-                                            MULTIPLY-MODE)))
+                                            LAYER-MODE-MULTIPLY-LEGACY)))
          (sepia-layer (car (gimp-layer-new img
+                                           "Sepia"
                                            owidth 
                                            oheight
                                            RGBA-IMAGE
-                                           "Sepia" 
                                            50 
-                                           GRAIN-MERGE-MODE)))
+                                           LAYER-MODE-GRAIN-MERGE-LEGACY)))
          (grain-layer (car (gimp-layer-new img
+                                           "Grain"
                                            owidth 
                                            oheight
                                            1
-                                           "Grain" 
                                            100 
-                                           OVERLAY-MODE)))
-         (grain-layer-mask (car (gimp-layer-create-mask grain-layer ADD-WHITE-MASK)))
+                                           LAYER-MODE-OVERLAY-LEGACY)))
+         (grain-layer-mask (car (gimp-layer-create-mask grain-layer ADD-MASK-WHITE)))
          )
     
     ; init
     (define (set-pt a index x y)
       (begin
-        (aset a (* index 2) x)
-        (aset a (+ (* index 2) 1) y)
+        (vector-set! a (* index 2) (/ x 255.0))
+        (vector-set! a (+ (* index 2) 1) (/ y 255.0))
         )
       )
     (define (splineValue)
-      (let* ((a (cons-array 6 'byte)))
+      (let* ((a (make-vector 6 0.0)))
         (set-pt a 0 0 0)
         (set-pt a 1 128 grain)
         (set-pt a 2 255 0)
@@ -83,74 +83,74 @@
         )
     
     ;some more red
-    (gimp-image-insert-layer img edge-layer 0 0)
+    (gimp-image-insert-layer img edge-layer -1 0)
     (gimp-item-set-name edge-layer "Edge Amp")
-    (gimp-color-balance edge-layer MIDTONES TRUE 20 0 0)
-    (gimp-color-balance edge-layer HIGHLIGHTS TRUE 20 0 0)
+    (gimp-drawable-color-balance edge-layer TRANSFER-MIDTONES TRUE 20 0 0)
+    (gimp-drawable-color-balance edge-layer TRANSFER-HIGHLIGHTS TRUE 20 0 0)
     
-    (gimp-layer-set-mode edge-layer GRAIN-EXTRACT-MODE)
+    (gimp-layer-set-mode edge-layer LAYER-MODE-GRAIN-EXTRACT-LEGACY)
     (gimp-edit-copy-visible img)
     (set! red-layer (car (gimp-layer-new-from-visible img img "Red")))
-    (gimp-image-insert-layer img red-layer 0 0)
-    (gimp-layer-set-mode red-layer GRAIN-MERGE-MODE)
+    (gimp-image-insert-layer img red-layer -1 0)
+    (gimp-layer-set-mode red-layer LAYER-MODE-GRAIN-MERGE-LEGACY)
     (gimp-layer-set-opacity red-layer redtint)
-    (gimp-invert red-layer)
+    (gimp-drawable-invert red-layer FALSE)
     (gimp-item-set-visible edge-layer FALSE)
     
     ;set desaturated and multiply layer
-    (gimp-image-insert-layer img desat-layer 0 -1)
+    (gimp-image-insert-layer img desat-layer -1 -1)
     (gimp-item-set-name desat-layer "Desaturated")
-    (gimp-layer-set-mode desat-layer NORMAL-MODE)
+    (gimp-layer-set-mode desat-layer LAYER-MODE-NORMAL)
     (gimp-layer-set-opacity desat-layer 100)
-    (gimp-hue-saturation desat-layer ALL-HUES 0 0 desaturation)
+    (gimp-drawable-hue-saturation desat-layer HUE-RANGE-ALL 0 0 desaturation 0)
     
-    (gimp-image-insert-layer img multiply-layer 0 -1)
+    (gimp-image-insert-layer img multiply-layer -1 -1)
     (gimp-item-set-name multiply-layer "Multiply 1")
-    (gimp-layer-set-mode multiply-layer MULTIPLY-MODE)
+    (gimp-layer-set-mode multiply-layer LAYER-MODE-MULTIPLY-LEGACY)
     (gimp-layer-set-opacity multiply-layer multiply)
-    (gimp-hue-saturation multiply-layer ALL-HUES 0 0 desaturation)
+    (gimp-drawable-hue-saturation multiply-layer HUE-RANGE-ALL 0 0 desaturation 0)
     
     (if(= extra-dark TRUE)
        (begin
-         (gimp-image-insert-layer img multiply-layer2 0 -1)
+         (gimp-image-insert-layer img multiply-layer2 -1 -1)
          (gimp-item-set-name multiply-layer2 "Multiply 2")
-         (gimp-layer-set-mode multiply-layer2 MULTIPLY-MODE)
+         (gimp-layer-set-mode multiply-layer2 LAYER-MODE-MULTIPLY-LEGACY)
          (gimp-layer-set-opacity multiply-layer2 100)
-         (gimp-desaturate-full multiply-layer2 DESATURATE-LUMINOSITY)
+         (gimp-drawable-desaturate multiply-layer2 DESATURATE-LUMA)
          (gimp-layer-add-mask multiply-layer2 multiply-layer2-mask)
          
          (gimp-selection-all img)
-         (gimp-edit-copy multiply-layer2)
-         (gimp-floating-sel-anchor (car (gimp-edit-paste multiply-layer2-mask TRUE)))
+         (gimp-edit-copy (vector multiply-layer2))
+         (gimp-floating-sel-anchor (vector-ref (car (gimp-edit-paste multiply-layer2-mask TRUE)) 0))
          )
        )
     
     ;set overlay layers
-    (gimp-image-insert-layer img overlay-layer1 0 -1)
+    (gimp-image-insert-layer img overlay-layer1 -1 -1)
     (gimp-item-set-name overlay-layer1 "Overlay 1")
-    (gimp-layer-set-mode overlay-layer1 OVERLAY-MODE)
+    (gimp-layer-set-mode overlay-layer1 LAYER-MODE-OVERLAY-LEGACY)
     (gimp-layer-set-opacity overlay-layer1 overlay)
-    (gimp-desaturate-full overlay-layer1 DESATURATE-LUMINOSITY)
-    (gimp-levels overlay-layer1 HISTOGRAM-VALUE 70 150 gamma 0 255)
+    (gimp-drawable-desaturate overlay-layer1 DESATURATE-LUMA)
+    (gimp-drawable-merge-new-filter overlay-layer1 "gimp:levels" "" LAYER-MODE-REPLACE 1.0 "trc" TRC-NON-LINEAR "low-input" (/ 70 255.0) "high-input" (/ 150 255.0) "gamma" gamma)
     
-    (gimp-image-insert-layer img overlay-layer2 0 -1)
+    (gimp-image-insert-layer img overlay-layer2 -1 -1)
     (gimp-item-set-name overlay-layer2 "Overlay 2")
-    (gimp-layer-set-mode overlay-layer2 OVERLAY-MODE)
+    (gimp-layer-set-mode overlay-layer2 LAYER-MODE-OVERLAY-LEGACY)
     (gimp-layer-set-opacity overlay-layer2 overlay)
-    (gimp-desaturate-full overlay-layer2 DESATURATE-LUMINOSITY)
-    (gimp-levels overlay-layer2 HISTOGRAM-VALUE 70 150 gamma 0 255)
+    (gimp-drawable-desaturate overlay-layer2 DESATURATE-LUMA)
+    (gimp-drawable-merge-new-filter overlay-layer2 "gimp:levels" "" LAYER-MODE-REPLACE 1.0 "trc" TRC-NON-LINEAR "low-input" (/ 70 255.0) "high-input" (/ 150 255.0) "gamma" gamma)
     
     ;set yellow multiply layer
-    (gimp-image-insert-layer img yellow-layer 0 -1)
+    (gimp-image-insert-layer img yellow-layer -1 -1)
     (gimp-selection-all img)
     (gimp-context-set-foreground color2)
-    (gimp-edit-bucket-fill yellow-layer FG-BUCKET-FILL NORMAL-MODE 100 0 FALSE 0 0)
+    (gimp-drawable-edit-fill yellow-layer FILL-FOREGROUND)
     
     ;set sepia grain merge layer
-    (gimp-image-insert-layer img sepia-layer 0 -1)
+    (gimp-image-insert-layer img sepia-layer -1 -1)
     (gimp-selection-all img)
     (gimp-context-set-foreground color1)
-    (gimp-edit-bucket-fill sepia-layer FG-BUCKET-FILL NORMAL-MODE 100 0 FALSE 0 0)
+    (gimp-drawable-edit-fill sepia-layer FILL-FOREGROUND)
     
     ;move red tint layer to top
     (gimp-image-raise-item-to-top img red-layer)
@@ -159,25 +159,25 @@
     (if(> grain 0)
        (begin
          ;fill new layer with neutral gray
-         (gimp-image-insert-layer img grain-layer 0 -1)
-         (gimp-drawable-fill grain-layer TRANSPARENT-FILL)
+         (gimp-image-insert-layer img grain-layer -1 -1)
+         (gimp-drawable-fill grain-layer FILL-TRANSPARENT)
          (gimp-context-set-foreground '(128 128 128))
          (gimp-selection-all img)
-         (gimp-edit-bucket-fill grain-layer FG-BUCKET-FILL NORMAL-MODE 100 0 FALSE 0 0)
+         (gimp-drawable-edit-fill grain-layer FILL-FOREGROUND)
          (gimp-selection-none img)
          
          ;add grain and blur it
-         (plug-in-hsv-noise 1 img grain-layer 2 0 0 100)
-         (plug-in-gauss 1 img grain-layer 0.5 0.5 1)
+         (gimp-drawable-merge-new-filter grain-layer "gegl:noise-hsv" "" LAYER-MODE-REPLACE 1.0 "holdness" 2 "hue-distance" 0 "saturation-distance" 0 "value-distance" (/ 100 255.0))
+         (gimp-drawable-merge-new-filter grain-layer "gegl:gaussian-blur" "" LAYER-MODE-REPLACE 1.0 "std-dev-x" (* 0.5 0.32) "std-dev-y" (* 0.5 0.32) "abyss-policy" "clamp")
          (gimp-layer-add-mask grain-layer grain-layer-mask)
          
          ;select the original image, copy and paste it as a layer mask into the grain layer
          (gimp-selection-all img)
-         (gimp-edit-copy adraw)
-         (gimp-floating-sel-anchor (car (gimp-edit-paste grain-layer-mask TRUE)))
+         (gimp-edit-copy (vector adraw))
+         (gimp-floating-sel-anchor (vector-ref (car (gimp-edit-paste grain-layer-mask TRUE)) 0))
          
          ;set color curves of layer mask, so that only gray areas become grainy
-         (gimp-curves-spline grain-layer-mask  HISTOGRAM-VALUE  6 (splineValue))
+         (gimp-drawable-curves-spline grain-layer-mask  HISTOGRAM-VALUE  (splineValue))
          )
        )
     
@@ -187,11 +187,12 @@
        (begin
          (gimp-image-raise-item-to-top img edge-layer)
          (gimp-item-set-visible edge-layer TRUE)
-         (plug-in-sobel TRUE img edge-layer TRUE TRUE TRUE)
-         (gimp-levels-stretch edge-layer)
-         (gimp-desaturate-full edge-layer DESATURATE-LUMINOSITY)         
-         (gimp-invert edge-layer)
-         (gimp-layer-set-mode edge-layer MULTIPLY-MODE)
+         (gimp-drawable-merge-new-filter edge-layer "gegl:edge-sobel" "" LAYER-MODE-REPLACE 1.0 "horizontal" TRUE "vertical" TRUE "keep-sign" TRUE)
+
+         (gimp-drawable-levels-stretch edge-layer)
+         (gimp-drawable-desaturate edge-layer DESATURATE-LUMA)
+         (gimp-drawable-invert edge-layer FALSE)
+         (gimp-layer-set-mode edge-layer LAYER-MODE-MULTIPLY-LEGACY)
          (gimp-layer-set-opacity edge-layer 50)
          )
        )

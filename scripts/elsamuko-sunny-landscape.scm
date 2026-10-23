@@ -28,11 +28,11 @@
                                   num1 num2
                                   wb)
   (let* ((img (car (gimp-item-get-image adraw)))
-         (owidth (car (gimp-image-width img)))
-         (oheight (car (gimp-image-height img)))
+         (owidth (car (gimp-image-get-width img)))
+         (oheight (car (gimp-image-get-height img)))
          
-         (working-layer (car (gimp-layer-copy adraw FALSE)))
-         (extract-layer (car (gimp-layer-copy adraw FALSE)))
+         (working-layer (car (gimp-layer-copy adraw)))
+         (extract-layer (car (gimp-layer-copy adraw)))
          (wb-layer 0)
          (desat-layer 0)
          (tmplayer1 0)         
@@ -44,52 +44,52 @@
          (offset2 (* oheight (/ num2 100)))
          
          (overlay-layer (car (gimp-layer-new img
+                                             "Yellow Cast"
                                              owidth 
                                              oheight
                                              1
-                                             "Yellow Cast" 
                                              60 
-                                             OVERLAY-MODE)))
-         (overlay-layer-mask (car (gimp-layer-create-mask overlay-layer ADD-WHITE-MASK)))
+                                             LAYER-MODE-OVERLAY-LEGACY)))
+         (overlay-layer-mask (car (gimp-layer-create-mask overlay-layer ADD-MASK-WHITE)))
          
          
          (sub-blue-layer (car (gimp-layer-new img
+                                              "Sub Blue"
                                               owidth 
                                               oheight
                                               1
-                                              "Sub Blue" 
                                               100 
-                                              NORMAL-MODE)))
-         (sub-blue-layer-mask (car (gimp-layer-create-mask sub-blue-layer ADD-WHITE-MASK)))
+                                              LAYER-MODE-NORMAL)))
+         (sub-blue-layer-mask (car (gimp-layer-create-mask sub-blue-layer ADD-MASK-WHITE)))
          
          (top-blue-layer (car (gimp-layer-new img
+                                              "Top Blue"
                                               owidth 
                                               oheight
                                               1
-                                              "Top Blue" 
                                               65 
-                                              NORMAL-MODE)))
-         (top-blue-layer-mask (car (gimp-layer-create-mask top-blue-layer ADD-WHITE-MASK)))
+                                              LAYER-MODE-NORMAL)))
+         (top-blue-layer-mask (car (gimp-layer-create-mask top-blue-layer ADD-MASK-WHITE)))
          
          (cloud-layer (car (gimp-layer-new img
+                                           "Clouds"
                                            owidth 
                                            oheight
                                            1
-                                           "Clouds" 
                                            60 
-                                           SCREEN-MODE)))
-         (cloud-layer-mask (car (gimp-layer-create-mask cloud-layer ADD-WHITE-MASK)))
+                                           LAYER-MODE-SCREEN-LEGACY)))
+         (cloud-layer-mask (car (gimp-layer-create-mask cloud-layer ADD-MASK-WHITE)))
          )
     
     ; init
     (define (set-pt a index x y)
       (begin
-        (aset a (* index 2) x)
-        (aset a (+ (* index 2) 1) y)
+        (vector-set! a (* index 2) (/ x 255.0))
+        (vector-set! a (+ (* index 2) 1) (/ y 255.0))
         )
       )
     (define (spline-brightness)
-      (let* ((a (cons-array 8 'byte)))
+      (let* ((a (make-vector 8 0.0)))
         (set-pt a 0 0 0)
         (set-pt a 1 brightness 33)
         (set-pt a 2 127 199)
@@ -107,90 +107,84 @@
     ;extra color layer (not yet used)
     (if(= extra 1)
        (begin
-         (gimp-image-insert-layer img extract-layer 0 0)
-         (gimp-desaturate-full extract-layer DESATURATE-LIGHTNESS)
-         (gimp-layer-set-mode extract-layer GRAIN-EXTRACT-MODE)
+         (gimp-image-insert-layer img extract-layer -1 0)
+         (gimp-drawable-desaturate extract-layer DESATURATE-LIGHTNESS)
+         (gimp-layer-set-mode extract-layer LAYER-MODE-GRAIN-EXTRACT-LEGACY)
          (gimp-edit-copy-visible img)
          (set! color-layer (car (gimp-layer-new-from-visible img img "Color") ))
-         (gimp-image-insert-layer img color-layer 0 0)
-         (gimp-layer-set-mode color-layer GRAIN-MERGE-MODE)
+         (gimp-image-insert-layer img color-layer -1 0)
+         (gimp-layer-set-mode color-layer LAYER-MODE-GRAIN-MERGE-LEGACY)
          (gimp-item-set-visible color-layer FALSE)
          (gimp-image-remove-layer img extract-layer)
          )
        )
     
     ;sharpen + adjust contrast
-    (gimp-image-insert-layer img working-layer 0 -1)
-    (if(> sharpen 0) (plug-in-unsharp-mask 1 img working-layer 1 sharpen 5))
+    (gimp-image-insert-layer img working-layer -1 -1)
+    (if(> sharpen 0) (gimp-drawable-merge-new-filter working-layer "gegl:unsharp-mask" "" LAYER-MODE-REPLACE 1.0 "std-dev" 1 "scale" sharpen "threshold" (/ 5 255.0)))
     (gimp-item-set-name working-layer "Process Copy")
-    (gimp-curves-spline working-layer HISTOGRAM-VALUE 8 (spline-brightness))
+    (gimp-drawable-curves-spline working-layer HISTOGRAM-VALUE (spline-brightness))
     
     ;hues
-    (if(> ylight 0) (gimp-hue-saturation working-layer YELLOW-HUES 0 ylight 0))
-    (if(> glight 0) (gimp-hue-saturation working-layer GREEN-HUES 0 glight 0))
+    (if(> ylight 0) (gimp-drawable-hue-saturation working-layer HUE-RANGE-YELLOW 0 ylight 0 0))
+    (if(> glight 0) (gimp-drawable-hue-saturation working-layer HUE-RANGE-GREEN 0 glight 0 0))
     
     ;desaturate a bit
-    (set! desat-layer (car (gimp-layer-copy working-layer FALSE)))
-    (gimp-image-insert-layer img desat-layer 0 -1)
+    (set! desat-layer (car (gimp-layer-copy working-layer)))
+    (gimp-image-insert-layer img desat-layer -1 -1)
     (gimp-item-set-name desat-layer "Desaturate")
-    (gimp-desaturate-full desat-layer DESATURATE-LIGHTNESS)
+    (gimp-drawable-desaturate desat-layer DESATURATE-LIGHTNESS)
     (gimp-layer-set-opacity desat-layer desat)
     
     ;add some sunshine
-    (gimp-image-insert-layer img overlay-layer 0 -1)
+    (gimp-image-insert-layer img overlay-layer -1 -1)
     (gimp-context-set-foreground sunshine)
     (gimp-selection-all img)
-    (gimp-edit-bucket-fill overlay-layer FG-BUCKET-FILL NORMAL-MODE 100 0 FALSE 0 0)
-    (gimp-edit-copy working-layer)
+    (gimp-drawable-edit-fill overlay-layer FILL-FOREGROUND)
+    (gimp-edit-copy (vector working-layer))
     (gimp-layer-add-mask overlay-layer overlay-layer-mask)
-    (gimp-floating-sel-anchor (car (gimp-edit-paste overlay-layer-mask TRUE)))
-    (gimp-invert overlay-layer-mask)
-    (gimp-levels-stretch overlay-layer-mask)
+    (gimp-floating-sel-anchor (vector-ref (car (gimp-edit-paste overlay-layer-mask TRUE)) 0))
+    (gimp-drawable-invert overlay-layer-mask FALSE)
+    (gimp-drawable-levels-stretch overlay-layer-mask)
     (gimp-selection-none img)
     
     ;add 1st artificial sky
-    (gimp-image-insert-layer img sub-blue-layer 0 -1)
+    (gimp-image-insert-layer img sub-blue-layer -1 -1)
     (gimp-selection-all aimg)
     (gimp-context-set-foreground sky)
-    (gimp-edit-blend sub-blue-layer FG-TRANSPARENT-MODE
-                     NORMAL-MODE GRADIENT-LINEAR
-                     100 0 REPEAT-NONE
-                     TRUE FALSE 1 0
-                     TRUE 0 offset2 0 offset1)
-    (gimp-edit-copy working-layer)
+    (begin (gimp-context-set-gradient-fg-transparent) (gimp-context-set-opacity 100) (gimp-context-set-paint-mode LAYER-MODE-NORMAL-LEGACY) (gimp-context-set-gradient-repeat-mode REPEAT-NONE) (gimp-context-set-gradient-reverse TRUE) (gimp-context-set-gradient-blend-color-space GRADIENT-BLEND-RGB-PERCEPTUAL) (gimp-drawable-edit-gradient-fill sub-blue-layer GRADIENT-LINEAR 0 FALSE 1 0 TRUE 0 offset2 0 offset1))
+    (gimp-edit-copy (vector working-layer))
     (gimp-layer-add-mask sub-blue-layer sub-blue-layer-mask)
-    (gimp-floating-sel-anchor (car (gimp-edit-paste sub-blue-layer-mask TRUE)))
-    (gimp-levels-stretch sub-blue-layer-mask)
+    (gimp-floating-sel-anchor (vector-ref (car (gimp-edit-paste sub-blue-layer-mask TRUE)) 0))
+    (gimp-drawable-levels-stretch sub-blue-layer-mask)
     (gimp-selection-none img)
     
     ;add clouds
-    (gimp-image-insert-layer img cloud-layer 0 -1)
-    (gimp-edit-copy working-layer)
+    (gimp-image-insert-layer img cloud-layer -1 -1)
+    (gimp-edit-copy (vector working-layer))
     (gimp-layer-add-mask cloud-layer cloud-layer-mask)
-    (gimp-floating-sel-anchor (car (gimp-edit-paste cloud-layer-mask TRUE)))
-    (gimp-levels-stretch cloud-layer-mask)
+    (gimp-floating-sel-anchor (vector-ref (car (gimp-edit-paste cloud-layer-mask TRUE)) 0))
+    (gimp-drawable-levels-stretch cloud-layer-mask)
     (gimp-selection-none img)
-    (plug-in-solid-noise 1 img cloud-layer 0 0 (random 100) 4 3.5 7.0)
+    (gimp-drawable-merge-new-filter cloud-layer "gegl:noise-solid" "" LAYER-MODE-REPLACE 1.0 "tileable" FALSE "turbulent" FALSE "seed" (random 100) "detail" 4 "x-size" 3.5 "y-size" 7.0 "width" owidth "height" oheight)
     (gimp-context-set-foreground sky)
     (gimp-selection-all img)
-    (gimp-edit-bucket-fill cloud-layer FG-BUCKET-FILL OVERLAY-MODE 100 0 FALSE 0 0)
+    (gimp-context-set-paint-mode LAYER-MODE-OVERLAY-LEGACY)
+    (gimp-drawable-edit-fill cloud-layer FILL-FOREGROUND)
     (gimp-selection-none img)
     
     (gimp-context-set-foreground '(255 255 255))
     (gimp-context-set-background '(0 0 0))
-    (gimp-edit-blend cloud-layer FG-BG-RGB-MODE
-                     MULTIPLY-MODE GRADIENT-LINEAR
-                     100 0 REPEAT-NONE
-                     FALSE FALSE 1 0
-                     TRUE 0 offset1 0 offset2)
+    (begin (gimp-context-set-gradient-fg-bg-rgb) (gimp-context-set-opacity 100) (gimp-context-set-paint-mode LAYER-MODE-MULTIPLY-LEGACY) (gimp-context-set-gradient-repeat-mode REPEAT-NONE) (gimp-context-set-gradient-reverse FALSE) (gimp-context-set-gradient-blend-color-space GRADIENT-BLEND-RGB-PERCEPTUAL) (gimp-drawable-edit-gradient-fill cloud-layer GRADIENT-LINEAR 0 FALSE 1 0 TRUE 0 offset1 0 offset2))
+
     
     ;add 2nd artificial sky
-    (gimp-image-insert-layer img top-blue-layer 0 -1)
-    (gimp-edit-copy sub-blue-layer)
-    (gimp-floating-sel-anchor (car (gimp-edit-paste top-blue-layer TRUE)))
+    (gimp-image-insert-layer img top-blue-layer -1 -1)
+    (gimp-edit-copy (vector sub-blue-layer))
+    (gimp-floating-sel-anchor (vector-ref (car (gimp-edit-paste top-blue-layer TRUE)) 0))
     (gimp-layer-add-mask top-blue-layer top-blue-layer-mask)
-    (gimp-edit-copy sub-blue-layer-mask)
-    (gimp-floating-sel-anchor (car (gimp-edit-paste top-blue-layer-mask TRUE)))
+    (gimp-edit-copy (vector sub-blue-layer-mask))
+    (gimp-floating-sel-anchor (vector-ref (car (gimp-edit-paste top-blue-layer-mask TRUE)) 0))
     
     ;more color (not yet used)
     (if(= extra 1)
@@ -206,14 +200,14 @@
          (gimp-edit-copy-visible img)
          (set! tmplayer1 (car (gimp-layer-new-from-visible img img "Temp 1")))
          (set! tmplayer2 (car (gimp-layer-new-from-visible img img "Temp 2")))
-         (gimp-image-insert-layer img tmplayer1 0 -1)
-         (gimp-image-insert-layer img tmplayer2 0 -1)
-         (gimp-levels-stretch tmplayer1)
-         (gimp-layer-set-mode tmplayer2 GRAIN-EXTRACT-MODE)
+         (gimp-image-insert-layer img tmplayer1 -1 -1)
+         (gimp-image-insert-layer img tmplayer2 -1 -1)
+         (gimp-drawable-levels-stretch tmplayer1)
+         (gimp-layer-set-mode tmplayer2 LAYER-MODE-GRAIN-EXTRACT-LEGACY)
          (gimp-edit-copy-visible img)
          (set! wb-layer (car (gimp-layer-new-from-visible img img "White Balance")))
-         (gimp-image-insert-layer img wb-layer 0 -1)
-         (gimp-layer-set-mode wb-layer GRAIN-MERGE-MODE)
+         (gimp-image-insert-layer img wb-layer -1 -1)
+         (gimp-layer-set-mode wb-layer LAYER-MODE-GRAIN-MERGE-LEGACY)
          (gimp-image-remove-layer img tmplayer1)
          (gimp-image-remove-layer img tmplayer2)
          (gimp-layer-set-opacity wb-layer 60)

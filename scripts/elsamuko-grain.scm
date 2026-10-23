@@ -24,29 +24,29 @@
 
 (define (elsamuko-grain aimg adraw holdness value strength grainblur blackwhite)
   (let* ((img (car (gimp-item-get-image adraw)))
-         (owidth (car (gimp-image-width img)))
-         (oheight (car (gimp-image-height img)))
-         (bw-layer (car (gimp-layer-copy adraw FALSE)))
+         (owidth (car (gimp-image-get-width img)))
+         (oheight (car (gimp-image-get-height img)))
+         (bw-layer (car (gimp-layer-copy adraw)))
          (grainlayer (car (gimp-layer-new img
+                                          "Grain"
                                           owidth 
                                           oheight
                                           1
-                                          "Grain" 
                                           100 
-                                          OVERLAY-MODE)))
-         (grainlayermask (car (gimp-layer-create-mask grainlayer ADD-WHITE-MASK)))
+                                          LAYER-MODE-OVERLAY-LEGACY)))
+         (grainlayermask (car (gimp-layer-create-mask grainlayer ADD-MASK-WHITE)))
          (floatingsel 0)
          )
     
     ; init
     (define (set-pt a index x y)
       (begin
-        (aset a (* index 2) x)
-        (aset a (+ (* index 2) 1) y)
+        (vector-set! a (* index 2) (/ x 255.0))
+        (vector-set! a (+ (* index 2) 1) (/ y 255.0))
         )
       )
     (define (splineValue)
-      (let* ((a (cons-array 6 'byte)))
+      (let* ((a (make-vector 6 0.0)))
         (set-pt a 0 0 0)
         (set-pt a 1 128 strength)
         (set-pt a 2 255 0)
@@ -65,37 +65,38 @@
     ;optional b/w
     (if(= blackwhite TRUE)
        (begin
-         (gimp-image-insert-layer img bw-layer 0 -1)
+         (gimp-image-insert-layer img bw-layer -1 -1)
          (gimp-item-set-name bw-layer "B/W")
-         (gimp-desaturate-full bw-layer DESATURATE-LIGHTNESS)
+         (gimp-drawable-desaturate bw-layer DESATURATE-LIGHTNESS)
          )
        )
     
     ;fill new layer with neutral gray
-    (gimp-image-insert-layer img grainlayer 0 -1)
-    (gimp-drawable-fill grainlayer TRANSPARENT-FILL)
+    (gimp-image-insert-layer img grainlayer -1 -1)
+    (gimp-drawable-fill grainlayer FILL-TRANSPARENT)
     (gimp-context-set-foreground '(128 128 128))
     (gimp-selection-all img)
-    (gimp-edit-bucket-fill grainlayer FG-BUCKET-FILL NORMAL-MODE 100 0 FALSE 0 0)
+    (gimp-drawable-edit-fill grainlayer FILL-FOREGROUND)
     (gimp-selection-none img)
     
     ;add grain and blur it
-    (plug-in-hsv-noise 1 img grainlayer holdness 0 0 value)
+    (gimp-drawable-merge-new-filter grainlayer "gegl:noise-hsv" "" LAYER-MODE-REPLACE 1.0 "holdness" holdness "hue-distance" 0 "saturation-distance" 0 "value-distance" (/ value 255.0))
     (if(> grainblur 0)
        (begin
-         (plug-in-gauss 1 img grainlayer grainblur grainblur 1)
+         (gimp-drawable-merge-new-filter grainlayer "gegl:gaussian-blur" "" LAYER-MODE-REPLACE 1.0 "std-dev-x" (* grainblur 0.32) "std-dev-y" (* grainblur 0.32) "abyss-policy" "clamp")
+
          )
        )
     (gimp-layer-add-mask grainlayer grainlayermask)
     
     ;select the original image, copy and paste it as a layer mask into the grain layer
     (gimp-selection-all img)
-    (gimp-edit-copy adraw)
-    (set! floatingsel (car (gimp-edit-paste grainlayermask TRUE)))
+    (gimp-edit-copy (vector adraw))
+    (set! floatingsel (vector-ref (car (gimp-edit-paste grainlayermask TRUE)) 0))
     (gimp-floating-sel-anchor floatingsel)
     
     ;set color curves of layer mask, so that only gray areas become grainy
-    (gimp-curves-spline grainlayermask  HISTOGRAM-VALUE  6 (splineValue))
+    (gimp-drawable-curves-spline grainlayermask  HISTOGRAM-VALUE  (splineValue))
     
     ; tidy up
     (gimp-image-undo-group-end img)

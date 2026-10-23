@@ -28,15 +28,15 @@
                               lsmooth lthreshhold
                               contrast edge color)
   (let* ((img (car (gimp-item-get-image adraw)))
-         (owidth (car (gimp-image-width img)))
-         (oheight (car (gimp-image-height img)))
+         (owidth (car (gimp-image-get-width img)))
+         (oheight (car (gimp-image-get-height img)))
          (colorlayer (car (gimp-layer-new img
+                                          "Color" 
                                           owidth 
                                           oheight
                                           1
-                                          "Color" 
                                           100 
-                                          NORMAL-MODE)))
+                                          LAYER-MODE-NORMAL)))
          (shadowlayer 0)
          (lineslayer 0)
          )
@@ -52,47 +52,48 @@
     
     ;set smoothness
     (if (> ssmooth 0)
-        (plug-in-gauss 1 img adraw ssmooth ssmooth 0)
+        (gimp-drawable-merge-new-filter adraw "gegl:gaussian-blur" "" LAYER-MODE-REPLACE 1.0 "std-dev-x" (* ssmooth 0.32) "std-dev-y" (* ssmooth 0.32) "abyss-policy" "clamp")
         )
     
     ;add color layer
-    (gimp-image-insert-layer img colorlayer 0 -1)
-    (gimp-drawable-fill colorlayer TRANSPARENT-FILL)
+    (gimp-image-insert-layer img colorlayer -1 -1)
+    (gimp-drawable-fill colorlayer FILL-TRANSPARENT)
     (gimp-selection-all img)
-    (gimp-edit-bucket-fill colorlayer FG-BUCKET-FILL NORMAL-MODE 100 0 FALSE 0 0)
+    (gimp-drawable-edit-fill colorlayer FILL-FOREGROUND)
     (gimp-selection-none img)
     
     ;copy and add original image two times
-    (set! shadowlayer (car (gimp-layer-copy adraw FALSE)))
-    (set! lineslayer (car (gimp-layer-copy adraw FALSE)))
-    (gimp-image-insert-layer img shadowlayer 0 -1)
-    (gimp-image-insert-layer img lineslayer 0 -1)
+    (set! shadowlayer (car (gimp-layer-copy adraw)))
+    (set! lineslayer (car (gimp-layer-copy adraw)))
+    (gimp-image-insert-layer img shadowlayer -1 -1)
+    (gimp-image-insert-layer img lineslayer -1 -1)
     (gimp-item-set-name shadowlayer "Shadow")
     (gimp-item-set-name lineslayer "Lines")
     
     ;threshhold on shadow layer
-    (gimp-threshold shadowlayer sthreshhold 255)
-    (gimp-layer-set-mode shadowlayer MULTIPLY-MODE)
+    (gimp-drawable-threshold shadowlayer HISTOGRAM-VALUE (/ sthreshhold 255.0) 1.0)
+    (gimp-layer-set-mode shadowlayer LAYER-MODE-MULTIPLY-LEGACY)
     
     ;high contrast, edge detection and threshhold on lines layer
     (if (> contrast 0)
-        (plug-in-unsharp-mask 1 img lineslayer 60 contrast 0)
+        (gimp-drawable-merge-new-filter lineslayer "gegl:unsharp-mask" "" LAYER-MODE-REPLACE 1.0 "std-dev" 60 "scale" contrast "threshold" 0)
         )
     
     ;edge detection
-    (if (= edge 0) (plug-in-neon 1 img lineslayer 5 0))
-    (if (= edge 1) (plug-in-sobel 1 img lineslayer 1 1 1))
+    (if (= edge 0) (gimp-drawable-merge-new-filter lineslayer "gegl:edge-neon" "" LAYER-MODE-REPLACE 1.0 "radius" 5 "amount" 0))
+    (if (= edge 1) (gimp-drawable-merge-new-filter lineslayer "gegl:edge-sobel" "" LAYER-MODE-REPLACE 1.0 "horizontal" TRUE "vertical" TRUE "keep-sign" TRUE))
 
-    (gimp-invert lineslayer)
-    (gimp-levels-stretch lineslayer)
+    (gimp-drawable-invert lineslayer FALSE)
+    (gimp-drawable-levels-stretch lineslayer)
     
     (if (> lsmooth 0)
         (begin
-          (plug-in-gauss 1 img lineslayer lsmooth lsmooth 0)
+          (gimp-drawable-merge-new-filter lineslayer "gegl:gaussian-blur" "" LAYER-MODE-REPLACE 1.0 "std-dev-x" (* lsmooth 0.32) "std-dev-y" (* lsmooth 0.32) "abyss-policy" "clamp")
+
           )
         )
-    (gimp-threshold lineslayer lthreshhold 255)
-    (gimp-layer-set-mode lineslayer MULTIPLY-MODE)
+    (gimp-drawable-threshold lineslayer HISTOGRAM-VALUE (/ lthreshhold 255.0) 1.0)
+    (gimp-layer-set-mode lineslayer LAYER-MODE-MULTIPLY-LEGACY)
     
     ; tidy up
     (gimp-image-undo-group-end img)
